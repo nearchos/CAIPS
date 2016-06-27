@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/activity_training_top_row"
+        android:layout_alignParentTop="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:text="@string/Select_floor"
+            android:textSize="@dimen/text_size"
+            android:textColor="@color/colorAccent"
+            android:gravity="center_vertical"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
+
+        <Spinner
+            android:id="@+id/activity_training_floor_spinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/activity_training_bottom_row"
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Spinner
+            android:id="@+id/activity_training_auto_submit_spinner"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"/>
+
+        <Button
+            style="?android:attr/buttonBarButtonStyle"
+            android:id="@+id/activity_training_submit_button"
+            android:onClick="submit"
+            android:text="@string/Scan"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+    </LinearLayout>
+
+    <org.inspirecenter.indoorpositioningsystem.ui.TrainingView
+        android:id="@+id/activity_training_custom_map_view"
+        android:layout_below="@id/activity_training_top_row"
+        android:layout_above="@id/activity_training_bottom_row"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <View
+        android:background="@color/colorAccent"
+        android:layout_above="@id/activity_training_bottom_row"
+        android:layout_width="match_parent"
+        android:layout_height="1dip"/>
+
+    <View
+        android:background="@color/colorAccent"
+        android:layout_below="@id/activity_training_top_row"
+        android:layout_width="match_parent"
+        android:layout_height="1dip"/>
+
+</RelativeLayout>

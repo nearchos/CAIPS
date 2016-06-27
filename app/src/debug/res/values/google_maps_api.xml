@@ -1,0 +1,19 @@
+<resources>
+    <!--
+    To get one, follow this link, follow the directions and press "Create" at the end:
+
+    https://console.developers.google.com/flows/enableapi?apiid=maps_android_backend&keyType=CLIENT_SIDE_ANDROID&r=F8:D3:23:9D:AB:60:61:CD:67:79:EE:A0:8C:66:42:46:D7:B2:96:F0%3Borg.inspirecenter.indoorpositioningsystem.ui
+
+    You can also add your credentials to an existing key, using this line:
+    F8:D3:23:9D:AB:60:61:CD:67:79:EE:A0:8C:66:42:46:D7:B2:96:F0;org.inspirecenter.indoorpositioningsystem.ui
+
+    Alternatively, follow the directions here:
+    https://developers.google.com/maps/documentation/android/start#get-key
+
+    Once you have your key (it starts with "AIza"), replace the "google_maps_key"
+    string in this file.
+    -->
+    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">
+        AIzaSyBYvDl45oeF1ZSgiFBzRBuQwMgy7isWzlI
+    </string>
+</resources>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="scan_options">
+        <item>Once off</item>
+        <item>Repeat every 2 minutes</item>
+        <item>Repeat every 5 minutes</item>
+        <item>Repeat every 15 minutes</item>
+        <item>Repeat every 1 hour</item>
+        <item>Repeat every 8 hours</item>
+        <item>Repeat every 12 hours</item>
+    </string-array>
+
+    <integer-array name="scan_intervals_in_sec">
+        <item>0</item>
+        <item>120</item>
+        <item>300</item>
+        <item>900</item>
+        <item>3600</item>
+        <item>28800</item>
+        <item>43200</item>
+    </integer-array>
+
+</resources>

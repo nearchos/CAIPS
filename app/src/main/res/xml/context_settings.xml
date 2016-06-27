@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+        android:title="Hardware sensors"/>
+
+    <CheckBoxPreference
+        android:key="device_brand"
+        android:title="Device brand"
+        android:summary="Details about the device manufacturer and model"/>
+
+    <CheckBoxPreference
+        android:key="battery_level"
+        android:title="Battery level"
+        android:summary="Percentage of battery remaining (1..100)"/>
+
+    <CheckBoxPreference
+        android:key="charging_state"
+        android:title="Charging state"
+        android:summary="Whether the device is currently charging"/>
+
+    <PreferenceCategory
+        android:title="Environment sensors"/>
+
+    <CheckBoxPreference
+        android:key="light"
+        android:title="Light state"
+        android:summary="Luminosity sensed by the device's light sensor"/>
+
+    <CheckBoxPreference
+        android:key="temperature"
+        android:title="Ambient temperature"
+        android:summary="Ambient temperature of the air"/>
+
+    <CheckBoxPreference
+        android:key="pressure"
+        android:title="Ambient air pressure"
+        android:summary="Ambient pressure of the air"/>
+
+    <CheckBoxPreference
+        android:key="humidity"
+        android:title="Relative humidity"
+        android:summary="Ambient relative humidity"/>
+
+    <PreferenceCategory
+        android:title="Location &amp; Motion sensors"/>
+
+    <CheckBoxPreference
+        android:key="location"
+        android:title="Location"
+        android:summary="As reported by the device itself"/>
+
+    <CheckBoxPreference
+        android:key="acceleration"
+        android:title="Acceleration"
+        android:summary="Acceleration over the X, Y, Z axis"/>
+
+    <CheckBoxPreference
+        android:key="magnetic_field"
+        android:title="Magnetic field"
+        android:summary="Magnetic field over the X, Y, Z axis"/>
+
+    <CheckBoxPreference
+        android:key="gravity"
+        android:title="Gravity"
+        android:summary="Gravity over the X, Y, Z axis"/>
+
+    <CheckBoxPreference
+        android:key="gyroscope"
+        android:title="Gyroscope"
+        android:summary="Gyroscope measurement over the X, Y, Z axis"/>
+
+    <CheckBoxPreference
+        android:key="rotation_vector"
+        android:title="Rotation vector"
+        android:summary="Rotation vector over the X, Y, Z axis"/>
+
+</PreferenceScreen>
