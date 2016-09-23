@@ -7,7 +7,7 @@
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <!-- To auto-complete the email text field in the login form with the user's emails -->
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
@@ -40,29 +40,25 @@
             android:noHistory="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".ui.ActivityLocations"
             android:label="@string/Locations" />
-
         <activity
             android:name=".ui.ActivityAuthenticate"
             android:label="Authenticate"
             android:noHistory="true" />
-
         <activity
             android:name=".ui.ActivityContextSettings"
-            android:label="@string/Context_settings"/>
-
+            android:label="@string/Context_settings" />
         <activity android:name=".ui.ActivityScan2">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ui.ActivityMain" />
         </activity>
-
         <activity
             android:name=".ui.ActivitySelectLocation"
             android:label="@string/Select_location">
@@ -70,7 +66,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ui.ActivityMain" />
         </activity>
-
         <activity
             android:name=".ui.ActivitySelectFloor"
             android:label="@string/Select_floor">
@@ -128,7 +123,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ui.ActivityEditFloor" />
         </activity>
-
         <activity
             android:name=".ui.ActivityTrainings"
             android:label="@string/Trainings">
@@ -136,7 +130,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ui.ActivityLocation" />
         </activity>
-
         <activity
             android:name=".ui.ActivitySubmitTraining"
             android:label="@string/Submit_training">
@@ -144,7 +137,8 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ui.ActivityTrainings" />
         </activity>
-
+        <activity android:name=".ui.ActivityCustomContext" />
+        <activity android:name=".ui.ActivityAddCustomContext"></activity>
     </application>
 
 </manifest>

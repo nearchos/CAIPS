@@ -1,6 +1,7 @@
 package org.inspirecenter.indoorpositioningsystem.ui;
 
 import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.*;
 import android.os.AsyncTask;
 import android.util.AttributeSet;
@@ -8,6 +9,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import org.inspirecenter.indoorpositioningsystem.R;
+import org.inspirecenter.indoorpositioningsystem.data.CustomContextElement;
 import org.inspirecenter.indoorpositioningsystem.data.Floor;
 import org.inspirecenter.indoorpositioningsystem.data.Image;
 import org.inspirecenter.indoorpositioningsystem.data.Location;
@@ -49,11 +51,19 @@ public class TrainingView extends View
     int bitmapWidth = 0;
     int bitmapHeight = 0;
 
+    private CustomContextElement [] customContextElements = new CustomContextElement[0];
+
     void init(final Location location, final Floor floor)
     {
         this.location = location;
         this.floor = floor;
         new LoadImageAsyncTask().execute(getContext()); // load image asynchronously
+
+        final DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(getContext());
+        final SQLiteDatabase sqLiteDatabase = databaseOpenHelper.getWritableDatabase();
+        customContextElements = DatabaseHelper.getCustomContextElements(sqLiteDatabase, location.getUuid(), true);
+        sqLiteDatabase.close();
+
     }
 
     double [] getSelectedCoordinates()
@@ -150,6 +160,13 @@ public class TrainingView extends View
         // draw menu_location and floor text (bottom left)
         canvas.drawText(floor.getName(), 32, canvasHeight-54, textPaint);
         canvas.drawText(location.getName(), 32, canvasHeight-22, textPaint);
+
+        // draw custom context (bottom right)
+        final int maxNumberOfCustomContextElementsToDisplay = 3;
+        for(int i = 0; i < maxNumberOfCustomContextElementsToDisplay && i < customContextElements.length; i++) {
+            final String line = customContextElements[i].getName() + ": " + customContextElements[i].getValue();
+            canvas.drawText(line, canvasWidth - 32 - textPaint.measureText(line), canvasHeight - 22 - (i * 32), textPaint);
+        }
     }
 
     private class LoadImageAsyncTask extends AsyncTask

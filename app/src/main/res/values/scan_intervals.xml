@@ -3,6 +3,11 @@
 
     <string-array name="scan_options">
         <item>Once off</item>
+        <item>Repeat 2 times</item>
+        <item>Repeat 5 times</item>
+        <item>Repeat 10 times</item>
+        <item>Repeat 50 times</item>
+        <item>Repeat 100 times</item>
         <item>Repeat every 2 minutes</item>
         <item>Repeat every 5 minutes</item>
         <item>Repeat every 15 minutes</item>
@@ -13,6 +18,11 @@
 
     <integer-array name="scan_intervals_in_sec">
         <item>0</item>
+        <item>-2</item>
+        <item>-5</item>
+        <item>-10</item>
+        <item>-50</item>
+        <item>-100</item>
         <item>120</item>
         <item>300</item>
         <item>900</item>

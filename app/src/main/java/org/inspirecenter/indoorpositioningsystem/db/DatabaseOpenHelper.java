@@ -11,7 +11,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseOpenHelper extends SQLiteOpenHelper {
 
     // if you change the database schema, you must increment the database version.
-    public static final int DATABASE_VERSION = 10;
+    public static final int DATABASE_VERSION = 11;
 
     // this is used to name the underlying file storing the actual data
     public static final String DATABASE_NAME = "indoor_positioning.db";
@@ -25,6 +25,7 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
         db.execSQL(SQL_CREATE_FLOORS);
         db.execSQL(SQL_CREATE_IMAGES);
         db.execSQL(SQL_CREATE_TRAININGS);
+        db.execSQL(SQL_CREATE_CUSTOM_CONTEXT);
     }
 
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -33,6 +34,7 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
         db.execSQL(SQL_DELETE_FLOORS);
         db.execSQL(SQL_DELETE_IMAGES);
         db.execSQL(SQL_DELETE_TRAININGS);
+        db.execSQL(SQL_DELETE_CUSTOM_CONTEXT);
         onCreate(db);
     }
 
@@ -77,6 +79,15 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
                     "lng FLOAT" +
                     ")";
 
+    private static final String SQL_CREATE_CUSTOM_CONTEXT =
+            "CREATE TABLE customContext (" +
+                    "uuid TEXT PRIMARY KEY NOT NULL, " +
+                    "locationUuid TEXT NOT NULL, " +
+                    "name TEXT NOT NULL, " +
+                    "value TEXT NOT NULL, " +
+                    "checked INTEGER" +
+                    ")";
+
     private static final String SQL_DELETE_LOCATIONS =
             "DROP TABLE IF EXISTS menu_locations";
 
@@ -88,4 +99,7 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
 
     private static final String SQL_DELETE_TRAININGS =
             "DROP TABLE IF EXISTS trainings";
+
+    private static final String SQL_DELETE_CUSTOM_CONTEXT =
+            "DROP TABLE IF EXISTS customContext";
 }

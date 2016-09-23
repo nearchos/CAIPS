@@ -3,15 +3,16 @@
     <string name="Select_account">Select account</string>
     <string name="Start_scan">Start scan</string>
     <string name="Context_settings">Context settings</string>
+    <string name="Custom_context">Custom context</string>
     <string name="Export">Export</string>
     <string name="About">About</string>
-    <string name="Submit">Submit</string>
     <string name="Training">Training</string>
     <string name="Trainings">Trainings</string>
     <string name="Num_of_trainings">Num of trainings: %1d</string>
     <string name="View">View</string>
     <string name="Submit_training">Submit training</string>
     <string name="Indoors_positioning">Indoors positioning</string>
+    <string name="UUID">UUID</string>
     <string name="Location">Location</string>
     <string name="Locations">Locations</string>
     <string name="Floors">Floors</string>
@@ -37,11 +38,17 @@
     <string name="Timestamp">Timestamp</string>
     <string name="Coordinates">Coordinates</string>
     <string name="Please_select_an_account">Please select an account</string>
+    <string name="Please_select_a_location">Please select a location</string>
     <string name="Delete_training">Delete training?</string>
     <string name="Yes">Yes</string>
     <string name="No">No</string>
+    <string name="Delete">Delete</string>
     <string name="Deleted">Deleted</string>
     <string name="Name">Name</string>
+    <string name="Value">Value</string>
+    <string name="Active">Active</string>
+    <string name="Inactive">Inactive</string>
+    <string name="Checked">Checked</string>
 
     <string name="title_activity_main2">Main2Activity</string>
     <string name="title_activity_main22">Main2Activity2</string>
@@ -61,5 +68,5 @@
     </string>
     <string name="title_activity_activity_locations">ActivityLocations</string>
     <string name="title_activity_activity_select_coordinates">Select Coordinates</string>
-    <string name="title_activity_activity_select_image">SelectImage</string>
+    <string name="title_activity_activity_select_image">Select Image</string>
 </resources>

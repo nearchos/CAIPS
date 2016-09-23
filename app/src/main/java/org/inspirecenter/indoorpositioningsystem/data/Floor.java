@@ -89,12 +89,8 @@ public class Floor implements Serializable {
 
         Floor floor = (Floor) o;
 
-        if (!uuid.equals(floor.uuid))
-        {
-            return false;
-        }
+        return uuid.equals(floor.uuid);
 
-        return true;
     }
 
     @Override

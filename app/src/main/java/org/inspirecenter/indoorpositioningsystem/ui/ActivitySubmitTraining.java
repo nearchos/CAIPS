@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.ActionBar;
 import android.content.*;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -30,6 +31,7 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import org.inspirecenter.indoorpositioningsystem.R;
+import org.inspirecenter.indoorpositioningsystem.data.CustomContextElement;
 import org.inspirecenter.indoorpositioningsystem.data.Floor;
 import org.inspirecenter.indoorpositioningsystem.data.Location;
 import org.inspirecenter.indoorpositioningsystem.data.Training;
@@ -49,7 +51,7 @@ public class ActivitySubmitTraining extends AppCompatActivity
 
     private Spinner floorSpinner;
     private Spinner autoSubmitSpinner;
-    private Button submitButton;
+    private Button scanButton;
     private TrainingView trainingView;
 
     private ScanResultsNotifier scanResultsNotifier;
@@ -71,7 +73,7 @@ public class ActivitySubmitTraining extends AppCompatActivity
 
         floorSpinner = (Spinner) findViewById(R.id.activity_training_floor_spinner);
         autoSubmitSpinner = (Spinner) findViewById(R.id.activity_training_auto_submit_spinner);
-        submitButton = (Button) findViewById(R.id.activity_training_submit_button);
+        scanButton = (Button) findViewById(R.id.activity_training_submit_button);
         trainingView = (TrainingView) findViewById(R.id.activity_training_custom_map_view);
 
         // Create an ArrayAdapter using the string array and a default spinner layout
@@ -79,6 +81,8 @@ public class ActivitySubmitTraining extends AppCompatActivity
         // Specify the layout to use when the list of choices appears
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         autoSubmitSpinner.setAdapter(adapter);
+
+        locationUuid = getIntent().getStringExtra(INTENT_EXTRA_LOCATION_UUID_KEY);
 
         wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
 
@@ -109,6 +113,14 @@ public class ActivitySubmitTraining extends AppCompatActivity
             case R.id.menu_submit_training_context_settings:
                 startActivity(new Intent(this, ActivityContextSettings.class));
                 return true;
+            case R.id.menu_submit_training_custom_context:
+                final Intent intent = new Intent(this, ActivityCustomContext.class);
+                final DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(this);
+                final SQLiteDatabase sqLiteDatabase = databaseOpenHelper.getWritableDatabase();
+                final Location location = DatabaseHelper.getLocation(sqLiteDatabase, locationUuid);
+                intent.putExtra("location", location);
+                startActivity(intent);
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -120,7 +132,7 @@ public class ActivitySubmitTraining extends AppCompatActivity
         if(countDownTimer != null) {
             countDownTimer.cancel();
             countDownTimer = null;
-            submitButton.setText(R.string.Submit);
+            scanButton.setText(R.string.Scan);
         } else if(wifiManager.getWifiState() != WifiManager.WIFI_STATE_ENABLED) {
             Toast.makeText(this, "WiFi is not enabled!", Toast.LENGTH_SHORT).show();
         } else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
@@ -131,28 +143,44 @@ public class ActivitySubmitTraining extends AppCompatActivity
                     PERMISSIONS_REQUEST_CODE_ACCESS_AND_CHANGE_WIFI);
             //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
         } else {
+            final int [] intervals = getResources().getIntArray(R.array.scan_intervals_in_sec);
+            interval = intervals[autoSubmitSpinner.getSelectedItemPosition()];
+            if(interval < 0) repeats = -interval;
             trigger();
         }
     }
 
     private CountDownTimer countDownTimer = null;
 
+    private int interval;
+    private int repeats = 0;
+
     public void trigger() {
-        final int [] intervals = getResources().getIntArray(R.array.scan_intervals_in_sec);
-        final int interval = intervals[autoSubmitSpinner.getSelectedItemPosition()];
         if(interval > 0) {
             final long intervalInMs = interval * 1000L;
             countDownTimer = new CountDownTimer(intervalInMs, 1000) {
                 public void onTick(long millisUntilFinished) {
-                    submitButton.setText(String.format(Locale.US, "Scan in %d ms", millisUntilFinished / 1000));
+                    scanButton.setText(String.format(Locale.US, "Scan in %d ms", millisUntilFinished / 1000));
                 }
 
                 public void onFinish() {
-                    submitButton.setText(R.string.Submit);
+                    scanButton.setText(R.string.Scan);
                     scan();
                 }
             }.start();
-        } else {
+        } else if(repeats > 0) {
+            countDownTimer = new CountDownTimer(5000, 1000) {
+                public void onTick(long millisUntilFinished) {
+                    scanButton.setText(String.format(Locale.US, "Scan %d of %d in %d ms", -interval - repeats + 1, -interval, millisUntilFinished / 1000));
+                }
+
+                public void onFinish() {
+                    scanButton.setText(R.string.Scan);
+                    repeats--;
+                    scan();
+                }
+            }.start();
+        } else { // interval == 0
             scan();
         }
     }
@@ -167,8 +195,8 @@ public class ActivitySubmitTraining extends AppCompatActivity
 
     private void scan() {
         setProgressBarIndeterminateVisibility(true);
-        submitButton.setEnabled(false);
-        submitButton.setText(R.string.Scanning);
+        scanButton.setEnabled(false);
+        scanButton.setText(R.string.Scanning);
         registerReceiver(scanResultsNotifier, scanResultsAvailableIntentFilter);
         wifiManager.startScan();
     }
@@ -180,13 +208,15 @@ public class ActivitySubmitTraining extends AppCompatActivity
                 unregisterReceiver(ScanResultsNotifier.this);
                 setProgressBarIndeterminateVisibility(false);
 
-                submitButton.setText(R.string.Scan);
-                submitButton.setEnabled(true);
+                scanButton.setText(R.string.Scan);
+                scanButton.setEnabled(true);
                 final int [] intervals = getResources().getIntArray(R.array.scan_intervals_in_sec);
                 final int interval = intervals[autoSubmitSpinner.getSelectedItemPosition()];
                 if(interval > 0) {
                     trigger();
-                }
+                } else if(interval < 0 && repeats > 0) {
+                    trigger();
+                } // else interval == 0 and nothing is needed
 
                 final double [] coordinates = trainingView.getSelectedCoordinates();
 
@@ -234,81 +264,6 @@ public class ActivitySubmitTraining extends AppCompatActivity
         return contextStringBuilder.toString();
     }
 
-//    /**
-//     * TODO add sensing from http://developer.android.com/guide/topics/sensors/sensors_environment.html
-//     * @return
-//     */
-//    private String getContextAsJsonArray() {
-//        final Intent batteryStatus = registerReceiver(null, BATTERY_INTENT_FILTER);
-//        if(batteryStatus == null)
-//        {
-//            return  "[" +
-//                    (lightSensor != null ? "  \"illuminanceInLux\": " + illuminanceInLux + "," : "") +
-//                    (pressureSensor != null ? "  \"ambientAirPressureInMillibar\": " + ambientAirPressureInMillibar + "," : "") +
-//                    (relativeHumiditySensor != null ? "  \"relativeHumidityPercentage\": " + relativeHumidityPercentage + "," : "") +
-//                    (ambientTemperatureSensor != null ? "  \"ambientAirTemperatureInCelsius\": " + ambientAirTemperatureInCelsius + "," : "") +
-//                    "  \"model\": \"" + Build.MODEL + "\"," +
-//                    "  \"product\": \"" + Build.PRODUCT+ "\"" +
-//                    "]";
-//        }
-//        else
-//        {
-//            int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-//            boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL;
-//            int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-//            int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-//
-//            return  "{" +
-//                    (lightSensor != null ? "  \"illuminanceInLux\": " + illuminanceInLux + "," : "") +
-//                    (pressureSensor != null ? "  \"ambientAirPressureInMillibar\": " + ambientAirPressureInMillibar + "," : "") +
-//                    (relativeHumiditySensor != null ? "  \"relativeHumidityPercentage\": " + relativeHumidityPercentage + "," : "") +
-//                    (ambientTemperatureSensor != null ? "  \"ambientAirTemperatureInCelsius\": " + ambientAirTemperatureInCelsius + "," : "") +
-//
-//                    "  \"batteryCharging\": " + isCharging + "," +
-//                    "  \"batteryLevel\": " + level + "," +
-//                    "  \"batteryScale\": " + scale + ", " +
-//
-//                    "  \"model\": \"" + Build.MODEL + "\"," +
-//                    "  \"product\": \"" + Build.PRODUCT+ "\"" +
-//                    "}";
-//        }
-//    }
-//
-//    float illuminanceInLux = 0f;
-//    float ambientAirPressureInMillibar = 0f;
-//    float relativeHumidityPercentage = 0f;
-//    float ambientAirTemperatureInCelsius = 0f;
-
-//    @Override
-//    public final void onSensorChanged(SensorEvent event)
-//    {
-//        if(lightSensor == event.sensor)
-//        {
-//            illuminanceInLux = event.values[0];
-//        }
-//        else if(pressureSensor == event.sensor)
-//        {
-//            ambientAirPressureInMillibar = event.values[0];
-//        }
-//        else if(relativeHumiditySensor == event.sensor)
-//        {
-//            relativeHumidityPercentage = event.values[0];
-//        }
-//        else if(ambientTemperatureSensor == event.sensor)
-//        {
-//            ambientAirTemperatureInCelsius = event.values[0];
-//        }
-//
-//        float millibars_of_pressure = event.values[0];
-//        // Do something with this sensor data.
-//    }
-
-//    @Override
-//    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-//        // ignore for now
-//    }
-
-//    public static final String INTENT_EXTRA_FLOOR_UUID_KEY = "floor_uuid";
     public static final String INTENT_EXTRA_LOCATION_UUID_KEY = "location_uuid";
 
     @Override
@@ -316,14 +271,8 @@ public class ActivitySubmitTraining extends AppCompatActivity
         super.onResume();
 
         final Intent intent = getIntent();
-//        floorUUID = intent.getStringExtra(INTENT_EXTRA_FLOOR_UUID_KEY);
         final DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(this);
-//        final Floor floor = DatabaseHelper.getFloor(databaseOpenHelper.getReadableDatabase(), floorUUID);
-//
-//        final Location location = DatabaseHelper.getLocation(databaseOpenHelper.getReadableDatabase(), floor.getLocationUUID());
-//        locationUuid = location.getUuid();
 
-        locationUuid = intent.getStringExtra(INTENT_EXTRA_LOCATION_UUID_KEY);
         final Location location = DatabaseHelper.getLocation(databaseOpenHelper.getReadableDatabase(), locationUuid);
         final Floor [] floors = DatabaseHelper.getFloors(databaseOpenHelper.getReadableDatabase(), locationUuid);
 
@@ -405,9 +354,19 @@ public class ActivitySubmitTraining extends AppCompatActivity
 
         public ContextSensorEventListener() {
             super();
+
             // add constant context (make, model, etc.)
             latestValues.put("make", "[ \"" + Build.MANUFACTURER + "\" ]");
             latestValues.put("model", "[ \"" + Build.MODEL + "\" ]");
+
+            // add custom context
+            final DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(ActivitySubmitTraining.this);
+            final SQLiteDatabase sqLiteDatabase = databaseOpenHelper.getWritableDatabase();
+            final CustomContextElement [] customContextElements = DatabaseHelper.getCustomContextElements(sqLiteDatabase, locationUuid, true);
+            sqLiteDatabase.close();
+            for(final CustomContextElement customContextElement : customContextElements) {
+                latestValues.put(customContextElement.getName(), "[ \"" + customContextElement.getValue() + "\" ]");
+            }
         }
 
         String getContextAsJsonArray() {

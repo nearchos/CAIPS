@@ -5,10 +5,13 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
+import org.inspirecenter.indoorpositioningsystem.data.CustomContextElement;
 import org.inspirecenter.indoorpositioningsystem.data.Floor;
 import org.inspirecenter.indoorpositioningsystem.data.Image;
 import org.inspirecenter.indoorpositioningsystem.data.Location;
 import org.inspirecenter.indoorpositioningsystem.data.Training;
+
+import java.util.UUID;
 
 /**
  * @author Nearchos
@@ -331,4 +334,94 @@ Log.d(TAG, "Storing image: " + image.getUuid() + ", " + image.getLabel() + ", da
 
         return trainings;
     }
+
+    public static long addCustomContext(final SQLiteDatabase sqLiteDatabase, final String uuid, final String locationUuid, final String name, final String value, final boolean checked) {
+        final ContentValues contentValues = new ContentValues();
+        contentValues.put("uuid", uuid);
+        contentValues.put("locationUuid", locationUuid);
+        contentValues.put("name", name);
+        contentValues.put("value", value);
+        contentValues.put("checked", checked ? 1 : 0);
+
+        final long row = sqLiteDatabase.insert("customContext", null, contentValues);
+        sqLiteDatabase.close();
+        return row;
+    }
+
+    public static int editCustomContext(final SQLiteDatabase sqLiteDatabase, final CustomContextElement customContextElement) {
+        final ContentValues contentValues = new ContentValues();
+        contentValues.put("locationUuid", customContextElement.getLocationUuid());
+        contentValues.put("name", customContextElement.getName());
+        contentValues.put("value", customContextElement.getValue());
+        contentValues.put("checked", customContextElement.isChecked() ? 1 : 0);
+
+        final int rows = sqLiteDatabase.update("customContext", contentValues, "uuid=?", new String [] {customContextElement.getUuid()});
+        sqLiteDatabase.close();
+        return rows;
+    }
+
+    public static int editCustomContext(final SQLiteDatabase sqLiteDatabase, final String uuid, final boolean checked) {
+        final ContentValues contentValues = new ContentValues();
+        contentValues.put("checked", checked ? 1 : 0);
+
+        final int rows = sqLiteDatabase.update("customContext", contentValues, "uuid=?", new String [] { uuid });
+        sqLiteDatabase.close();
+        return rows;
+    }
+
+    /**
+     * Returns all {@link CustomContextElement}s.
+     *
+     * @param sqLiteDatabase
+     * @param locationUuid
+     * @return
+     */
+    public static CustomContextElement [] getCustomContextElements(final SQLiteDatabase sqLiteDatabase, final String locationUuid) {
+        return getCustomContextElements(sqLiteDatabase, locationUuid, false);
+    }
+
+    /**
+     * Returns all {@link CustomContextElement}s, unless hideUnchecked is set to true in which case
+     * it returns only those that are checked.
+     *
+     * @param sqLiteDatabase
+     * @param locationUuid
+     * @param hideUnchecked
+     * @return
+     */
+    public static CustomContextElement [] getCustomContextElements(final SQLiteDatabase sqLiteDatabase, final String locationUuid, final boolean hideUnchecked) {
+        final Cursor cursor;
+        if(hideUnchecked) {
+            cursor = sqLiteDatabase.rawQuery("SELECT * FROM customContext WHERE locationUuid=? AND checked=?", new String [] {locationUuid, "1"});
+        } else {
+            cursor = sqLiteDatabase.rawQuery("SELECT * FROM customContext WHERE locationUuid=?", new String [] {locationUuid});
+        }
+        int numOfRows = cursor.getCount();
+        int columnUUIDIndex = cursor.getColumnIndex("uuid");
+        int columnNameIndex = cursor.getColumnIndex("name");
+        int columnValueIndex = cursor.getColumnIndex("value");
+        int columnCheckedIndex = cursor.getColumnIndex("checked");
+
+        final CustomContextElement [] customContextElements = new CustomContextElement[numOfRows];
+        cursor.moveToFirst();
+        for(int i = 0; i < numOfRows; i++) {
+            final String uuid = cursor.getString(columnUUIDIndex);
+            final String name = cursor.getString(columnNameIndex);
+            final String value = cursor.getString(columnValueIndex);
+            final boolean checked = cursor.getInt(columnCheckedIndex) == 1;
+            customContextElements[i] = new CustomContextElement(uuid, locationUuid, name, value, checked);
+            cursor.moveToNext();
+        }
+        cursor.close();
+        sqLiteDatabase.close();
+
+        return customContextElements;
+    }
+
+    public static boolean deleteCustomContext(final SQLiteDatabase sqLiteDatabase, final CustomContextElement customContextElement) {
+        int rows = sqLiteDatabase.delete("customContext", "uuid=?", new String [] { customContextElement.getUuid() });
+        sqLiteDatabase.close();
+        return rows > 0;
+    }
+
 }

@@ -1,12 +1,13 @@
 package org.inspirecenter.indoorpositioningsystem.data;
 
+import java.io.Serializable;
 import java.util.Locale;
 
 /**
  * @author Nearchos
  *         Created: 25-Apr-16
  */
-public class FingerprintElement {
+public class FingerprintElement implements Serializable {
 
     private String ssid;
     private int levelAsDecibel;

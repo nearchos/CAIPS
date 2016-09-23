@@ -139,7 +139,6 @@ public class ActivityAddFloor extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-Log.d(TAG, "onActivityResult: " + requestCode + ", " + resultCode + ", " + data); // todo delete
         if(resultCode == RESULT_OK) {
             if(requestCode == REQUEST_CODE_EDIT_TOP_LEFT) {
                 double lat = data.getDoubleExtra(ActivitySelectCoordinates.SELECTED_LAT, 0d);
@@ -165,9 +164,15 @@ Log.d(TAG, "onActivityResult: " + requestCode + ", " + resultCode + ", " + data)
         final String topLeftS = topLeftEditText.getText().toString();
         double topLeftLat = Double.parseDouble(topLeftS.substring(0, topLeftS.indexOf(',')));
         double topLeftLng = Double.parseDouble(topLeftS.substring(topLeftS.indexOf(',') + 1));
+        final String bottomRightS = bottomRightEditText.getText().toString();
+        double bottomRightLat = Double.parseDouble(bottomRightS.substring(0, bottomRightS.indexOf(',')));
+        double bottomRightLng = Double.parseDouble(bottomRightS.substring(bottomRightS.indexOf(',') + 1));
         if(!(topLeftLat == 0d && topLeftLng == 0d)) {
             intent.putExtra(ActivitySelectCoordinates.INTENT_EXTRA_INITIAL_LAT_KEY, topLeftLat);
             intent.putExtra(ActivitySelectCoordinates.INTENT_EXTRA_INITIAL_LNG_KEY, topLeftLng);
+        } else if(!(bottomRightLat == 0d && bottomRightLng == 0d)) {
+            intent.putExtra(ActivitySelectCoordinates.INTENT_EXTRA_INITIAL_LAT_KEY, bottomRightLat);
+            intent.putExtra(ActivitySelectCoordinates.INTENT_EXTRA_INITIAL_LNG_KEY, bottomRightLng);
         }
         intent.putExtra(ActivitySelectCoordinates.INTENT_EXTRA_FLOOR_NAME_KEY, nameEditText.getText().toString());
         final Location location = DatabaseHelper.getLocation(new DatabaseOpenHelper(this).getReadableDatabase(), locationEditText.getText().toString());
@@ -180,9 +185,15 @@ Log.d(TAG, "onActivityResult: " + requestCode + ", " + resultCode + ", " + data)
         final String bottomRightS = bottomRightEditText.getText().toString();
         double bottomRightLat = Double.parseDouble(bottomRightS.substring(0, bottomRightS.indexOf(',')));
         double bottomRightLng = Double.parseDouble(bottomRightS.substring(bottomRightS.indexOf(',') + 1));
+        final String topLeftS = topLeftEditText.getText().toString();
+        double topLeftLat = Double.parseDouble(topLeftS.substring(0, topLeftS.indexOf(',')));
+        double topLeftLng = Double.parseDouble(topLeftS.substring(topLeftS.indexOf(',') + 1));
         if(!(bottomRightLat == 0d && bottomRightLng == 0d)) {
             intent.putExtra(ActivitySelectCoordinates.INTENT_EXTRA_INITIAL_LAT_KEY, bottomRightLat);
             intent.putExtra(ActivitySelectCoordinates.INTENT_EXTRA_INITIAL_LNG_KEY, bottomRightLng);
+        } else if(!(topLeftLat == 0d && topLeftLng == 0d)) {
+            intent.putExtra(ActivitySelectCoordinates.INTENT_EXTRA_INITIAL_LAT_KEY, topLeftLat);
+            intent.putExtra(ActivitySelectCoordinates.INTENT_EXTRA_INITIAL_LNG_KEY, topLeftLng);
         }
         intent.putExtra(ActivitySelectCoordinates.INTENT_EXTRA_FLOOR_NAME_KEY, nameEditText.getText().toString());
         final Location location = DatabaseHelper.getLocation(new DatabaseOpenHelper(this).getReadableDatabase(), locationEditText.getText().toString());

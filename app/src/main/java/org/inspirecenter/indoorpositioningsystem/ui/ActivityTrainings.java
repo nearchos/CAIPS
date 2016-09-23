@@ -5,6 +5,7 @@ import android.app.ActionBar;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Environment;
 import android.support.annotation.NonNull;
@@ -24,6 +25,7 @@ import android.widget.Toast;
 
 import org.inspirecenter.indoorpositioningsystem.R;
 import org.inspirecenter.indoorpositioningsystem.data.Floor;
+import org.inspirecenter.indoorpositioningsystem.data.Location;
 import org.inspirecenter.indoorpositioningsystem.data.Training;
 import org.inspirecenter.indoorpositioningsystem.db.DatabaseHelper;
 import org.inspirecenter.indoorpositioningsystem.db.DatabaseOpenHelper;
@@ -144,6 +146,14 @@ public class ActivityTrainings extends AppCompatActivity {
                 return true;
             case R.id.menu_trainings_context_settings:
                 startActivity(new Intent(this, ActivityContextSettings.class));
+                return true;
+            case R.id.menu_trainings_custom_context:
+                final Intent intent = new Intent(this, ActivityCustomContext.class);
+                final DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(this);
+                final SQLiteDatabase sqLiteDatabase = databaseOpenHelper.getWritableDatabase();
+                final Location location = DatabaseHelper.getLocation(sqLiteDatabase, locationUuid);
+                intent.putExtra("location", location);
+                startActivity(intent);
                 return true;
             case R.id.menu_trainings_export:
                 exportTrainings();
