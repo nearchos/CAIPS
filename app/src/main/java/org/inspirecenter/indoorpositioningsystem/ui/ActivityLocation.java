@@ -12,6 +12,8 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -59,6 +61,9 @@ public class ActivityLocation extends AppCompatActivity {
         floorsListView = (ListView) findViewById(R.id.activity_location_floors);
 
         numOfTrainingsTextView = (TextView) findViewById(R.id.activity_location_num_of_trainings_text_view);
+
+        // make sure soft keyboard is not shown until needed
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
     }
 
     private Location location;

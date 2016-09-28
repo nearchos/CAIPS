@@ -44,6 +44,7 @@ public class ActivitySelectImage extends AppCompatActivity {
     public static final String TAG = "ips";
 
     private ListView listView;
+    private ImageAdapter imageAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,11 +63,16 @@ public class ActivitySelectImage extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
+        updateListView();
+    }
+
+    private void updateListView() {
         // get images
         final DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(this);
         final Image [] images = DatabaseHelper.getAllImages(databaseOpenHelper.getReadableDatabase());
 
-        listView.setAdapter(new ImageAdapter(this, images));
+        imageAdapter = new ImageAdapter(this, images);
+        listView.setAdapter(imageAdapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -140,6 +146,7 @@ public class ActivitySelectImage extends AppCompatActivity {
                         final Image image = new Image(uuid, label, projectedBitmap);
                         final DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(ActivitySelectImage.this);
                         DatabaseHelper.addImage(databaseOpenHelper.getWritableDatabase(), image);
+                        updateListView();
                         dialog.dismiss();
                     }
                 });

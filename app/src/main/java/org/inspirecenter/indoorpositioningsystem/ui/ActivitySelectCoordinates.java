@@ -57,8 +57,6 @@ public class ActivitySelectCoordinates extends FragmentActivity implements OnMap
         final String locationName = intent.hasExtra(INTENT_EXTRA_LOCATION_NAME_KEY) ? intent.getStringExtra(INTENT_EXTRA_LOCATION_NAME_KEY) : "unknown";
         final String floorName = intent.hasExtra(INTENT_EXTRA_FLOOR_NAME_KEY) ? intent.getStringExtra(INTENT_EXTRA_FLOOR_NAME_KEY) : "unknown";
         crossHairView.setNames(floorName, locationName);
-
-
     }
 
     /**

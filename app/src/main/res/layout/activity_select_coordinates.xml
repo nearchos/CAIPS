@@ -38,7 +38,7 @@
         android:layout_above="@id/activity_select_coordinates_buttons_row"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        />
+        tools:layout="@layout/activity_select_coordinates" />
 
     <org.inspirecenter.indoorpositioningsystem.ui.CrossHairView
         android:id="@+id/activity_select_coordinates_crosshair"

@@ -21,7 +21,7 @@
             android:enabled="false"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="UUID"/>
+            android:hint="@string/uuid"/>
 
     </android.support.design.widget.TextInputLayout>
 
@@ -34,7 +34,7 @@
             android:enabled="false"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Created by"/>
+            android:hint="@string/Created_by"/>
 
     </android.support.design.widget.TextInputLayout>
 
@@ -47,7 +47,7 @@
             android:enabled="false"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Created on"/>
+            android:hint="@string/Created_on"/>
 
     </android.support.design.widget.TextInputLayout>
 
@@ -60,7 +60,7 @@
             android:enabled="false"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Name"/>
+            android:hint="@string/Name"/>
 
     </android.support.design.widget.TextInputLayout>
 

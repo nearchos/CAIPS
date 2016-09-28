@@ -69,4 +69,7 @@
     <string name="title_activity_activity_locations">ActivityLocations</string>
     <string name="title_activity_activity_select_coordinates">Select Coordinates</string>
     <string name="title_activity_activity_select_image">Select Image</string>
+    <string name="uuid">UUID</string>
+    <string name="Created_by">Created by</string>
+    <string name="Created_on">Created on</string>
 </resources>
