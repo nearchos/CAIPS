@@ -1,5 +1,6 @@
 package org.inspirecenter.indoorpositioningsystem.ui;
 
+import android.app.ActionBar;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AppCompatActivity;
@@ -31,6 +32,9 @@ public class ActivityAddCustomContext extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_custom_context);
+
+        final ActionBar actionBar = getActionBar();
+        if(actionBar != null) actionBar.setDisplayHomeAsUpEnabled(true);
 
         uuidEditText = (EditText) findViewById(R.id.custom_context_uuid);
         locationUuidEditText = (EditText) findViewById(R.id.custom_context_location_uuid);

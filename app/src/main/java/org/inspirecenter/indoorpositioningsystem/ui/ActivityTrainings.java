@@ -13,18 +13,15 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.util.PrintStreamPrinter;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
 import org.inspirecenter.indoorpositioningsystem.R;
-import org.inspirecenter.indoorpositioningsystem.data.Floor;
 import org.inspirecenter.indoorpositioningsystem.data.Location;
 import org.inspirecenter.indoorpositioningsystem.data.Training;
 import org.inspirecenter.indoorpositioningsystem.db.DatabaseHelper;
@@ -32,12 +29,8 @@ import org.inspirecenter.indoorpositioningsystem.db.DatabaseOpenHelper;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.Locale;
 
@@ -76,6 +69,7 @@ public class ActivityTrainings extends AppCompatActivity {
         super.onNewIntent(intent);
 
         locationUuid = intent.getStringExtra(INTENT_EXTRA_LOCATION_UUID_KEY);
+        if(locationUuid == null) finish();
 
         final DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(this);
         final Training [] trainings = DatabaseHelper.getTrainings(databaseOpenHelper.getReadableDatabase(), locationUuid);

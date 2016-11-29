@@ -206,9 +206,9 @@ public class ActivityContextSettings extends AppCompatActivity {
 
                 final Sensor gravitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
                 if(gravitySensor == null) {
-                    gyroscopeCheckBoxPreference.setSummary("No gravity sensor installed");
-                    gyroscopeCheckBoxPreference.setChecked(false);
-                    gyroscopeCheckBoxPreference.setEnabled(false);
+                    gravityCheckBoxPreference.setSummary("No gravity sensor installed");
+                    gravityCheckBoxPreference.setChecked(false);
+                    gravityCheckBoxPreference.setEnabled(false);
                 } else {
                     sensorManager.registerListener(sensorEventListener, gravitySensor, SensorManager.SENSOR_DELAY_NORMAL);
                 }

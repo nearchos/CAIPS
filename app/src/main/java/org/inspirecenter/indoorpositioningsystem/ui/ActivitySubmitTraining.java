@@ -274,28 +274,31 @@ public class ActivitySubmitTraining extends AppCompatActivity
         final DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(this);
 
         final Location location = DatabaseHelper.getLocation(databaseOpenHelper.getReadableDatabase(), locationUuid);
-        final Floor [] floors = DatabaseHelper.getFloors(databaseOpenHelper.getReadableDatabase(), locationUuid);
 
         final ActionBar actionBar = getActionBar();
         if(actionBar != null) actionBar.setTitle(getString(R.string.Training) + " - " + location.getName());
 
-        floorSpinner.setAdapter(new ArrayAdapter<Floor>(this, android.R.layout.simple_list_item_1, floors));
-        final Floor selectedFloor = floors[floorSpinner.getSelectedItemPosition()];
-        selectedFloorUuid = selectedFloor.getUuid();
-        trainingView.init(location, selectedFloor);
-        floorSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                final Floor selectedFloor = floors[position];
-                selectedFloorUuid = selectedFloor.getUuid();
-                trainingView.init(location, selectedFloor);
-            }
+        final Floor [] floors = DatabaseHelper.getFloors(databaseOpenHelper.getReadableDatabase(), locationUuid);
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
+        if(floors.length == 0) {
+            Toast.makeText(this, R.string.Must_define_at_least_one_floor_before_adding_trainings, Toast.LENGTH_SHORT).show();
+            finish();
+        } else {
+            floorSpinner.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, floors));
+            final Floor selectedFloor = floors[floorSpinner.getSelectedItemPosition()];
+            selectedFloorUuid = selectedFloor.getUuid();
+            trainingView.init(location, selectedFloor);
+            floorSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    final Floor selectedFloor = floors[position];
+                    selectedFloorUuid = selectedFloor.getUuid();
+                    trainingView.init(location, selectedFloor);
+                }
 
-            }
-        });
+                @Override public void onNothingSelected(AdapterView<?> parent) { /* empty */ }
+            });
+        }
 
         // Register environment sensors when the activity resumes.
 

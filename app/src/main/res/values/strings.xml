@@ -4,6 +4,7 @@
     <string name="Start_scan">Start scan</string>
     <string name="Context_settings">Context settings</string>
     <string name="Custom_context">Custom context</string>
+    <string name="Add_custom_context">Add custom context</string>
     <string name="Export">Export</string>
     <string name="About">About</string>
     <string name="Training">Training</string>
@@ -40,6 +41,7 @@
     <string name="Please_select_an_account">Please select an account</string>
     <string name="Please_select_a_location">Please select a location</string>
     <string name="Delete_training">Delete training?</string>
+    <string name="Must_define_at_least_one_floor_before_adding_trainings">Must define at least one floor before adding trainings</string>
     <string name="Yes">Yes</string>
     <string name="No">No</string>
     <string name="Delete">Delete</string>
