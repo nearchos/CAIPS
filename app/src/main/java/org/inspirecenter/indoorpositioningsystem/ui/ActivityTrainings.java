@@ -64,24 +64,16 @@ public class ActivityTrainings extends AppCompatActivity {
 
     private String locationUuid;
 
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-
-        locationUuid = intent.getStringExtra(INTENT_EXTRA_LOCATION_UUID_KEY);
-        if(locationUuid == null) finish();
-
+    private void updateListView() {
         final DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(this);
         final Training [] trainings = DatabaseHelper.getTrainings(databaseOpenHelper.getReadableDatabase(), locationUuid);
-
         Log.d(TAG, "trainings: " + trainings.length);
-
         listView.setAdapter(new TrainingsAdapter(this, trainings));
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 final Training training = trainings[position];
-                // TODO
+                // TODO add custom training viewer
                 Toast.makeText(ActivityTrainings.this, "Radiomap: " + training.getRadiomapAsJSON(), Toast.LENGTH_SHORT).show();
                 Toast.makeText(ActivityTrainings.this, "Context: " + training.getContextAsJSON(), Toast.LENGTH_SHORT).show();
             }
@@ -96,6 +88,16 @@ public class ActivityTrainings extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+
+        locationUuid = intent.getStringExtra(INTENT_EXTRA_LOCATION_UUID_KEY);
+        if(locationUuid == null) finish();
+
+        updateListView();
+    }
+
     private void deleteTraining(final Training training) {
         DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
             @Override
@@ -105,7 +107,7 @@ public class ActivityTrainings extends AppCompatActivity {
                         //Yes button clicked
                         final DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(ActivityTrainings.this);
                         DatabaseHelper.deleteTraining(databaseOpenHelper.getWritableDatabase(), training.getUUID());
-                        listView.invalidate();
+                        updateListView();
                         Toast.makeText(ActivityTrainings.this, R.string.Deleted, Toast.LENGTH_SHORT).show();
                         break;
 
@@ -152,6 +154,9 @@ public class ActivityTrainings extends AppCompatActivity {
             case R.id.menu_trainings_export:
                 exportTrainings();
                 return true;
+            case R.id.menu_trainings_delete_all:
+                deleteAllTrainings();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -169,6 +174,35 @@ public class ActivityTrainings extends AppCompatActivity {
         } else {
             saveToFile();
         }
+    }
+
+    private void deleteAllTrainings() {
+        DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which){
+                    case DialogInterface.BUTTON_POSITIVE:
+                        //Yes button clicked
+                        final DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(ActivityTrainings.this);
+                        final Location location = DatabaseHelper.getLocation(databaseOpenHelper.getReadableDatabase(), locationUuid);
+                        final int numOfDeletedTrainings = DatabaseHelper.deleteAllTrainings(databaseOpenHelper.getWritableDatabase(), locationUuid);
+                        updateListView();
+                        Toast.makeText(ActivityTrainings.this, getString(R.string.Deleted_all, numOfDeletedTrainings, location.getName()), Toast.LENGTH_SHORT).show();
+                        break;
+
+                    case DialogInterface.BUTTON_NEGATIVE:
+                        Toast.makeText(ActivityTrainings.this, R.string.Cancelled, Toast.LENGTH_SHORT).show();
+                        break;
+                }
+            }
+        };
+
+        new AlertDialog.Builder(this)
+                .setIcon(R.mipmap.ic_launcher)
+                .setTitle(R.string.Delete_all_trainings)
+                .setPositiveButton(R.string.Yes, dialogClickListener)
+                .setNegativeButton(R.string.No, dialogClickListener)
+                .show();
     }
 
     @Override
@@ -209,7 +243,7 @@ public class ActivityTrainings extends AppCompatActivity {
                 final PrintWriter printWriter = new PrintWriter(file);
                 printWriter.println(json.toString());
                 printWriter.close();
-                Toast.makeText(this, "File created in: " + dir.getAbsolutePath(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "File containing " + trainings.length + " trainings created in: " + dir.getAbsolutePath(), Toast.LENGTH_SHORT).show();
             } catch (FileNotFoundException fnfe) {
                 Toast.makeText(this, "Failed to create file: " + file.getAbsolutePath(), Toast.LENGTH_SHORT).show();
             }

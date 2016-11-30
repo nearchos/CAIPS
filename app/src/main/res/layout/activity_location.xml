@@ -18,6 +18,7 @@
 
         <EditText
             android:id="@+id/location_uuid"
+            android:maxLines="1"
             android:enabled="false"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -31,6 +32,7 @@
 
         <EditText
             android:id="@+id/location_created_by"
+            android:maxLines="1"
             android:enabled="false"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -44,6 +46,7 @@
 
         <EditText
             android:id="@+id/location_timestamp"
+            android:maxLines="1"
             android:enabled="false"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -57,6 +60,7 @@
 
         <EditText
             android:id="@+id/location_name"
+            android:maxLines="1"
             android:enabled="false"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

@@ -295,6 +295,12 @@ Log.d(TAG, "Storing image: " + image.getUuid() + ", " + image.getLabel() + ", da
         return rows > 0;
     }
 
+    public static int deleteAllTrainings(final SQLiteDatabase sqLiteDatabase, final String locationUuid) {
+        int rows = sqLiteDatabase.delete("trainings", "locationUuid=?", new String [] { locationUuid});
+        sqLiteDatabase.close();
+        return rows;
+    }
+
     public static int getNumOfTrainings(final SQLiteDatabase sqLiteDatabase, final String locationUuid) {
         final Cursor cursor = sqLiteDatabase.rawQuery("SELECT * FROM trainings WHERE locationUuid=?", new String [] {locationUuid});
         int numOfRows = cursor.getCount();

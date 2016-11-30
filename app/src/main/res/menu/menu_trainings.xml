@@ -4,5 +4,6 @@
     <item android:id="@+id/menu_trainings_context_settings" android:title="@string/Context_settings"/>
     <item android:id="@+id/menu_trainings_custom_context" android:title="@string/Custom_context"/>
     <item android:id="@+id/menu_trainings_export" android:title="@string/Export"/>
+    <item android:id="@+id/menu_trainings_delete_all" android:title="@string/Delete_all"/>
 
 </menu>
