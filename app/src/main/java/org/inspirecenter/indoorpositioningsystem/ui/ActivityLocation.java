@@ -204,4 +204,10 @@ public class ActivityLocation extends AppCompatActivity {
         startTrainingIntent.putExtra(ActivityTrainings.INTENT_EXTRA_LOCATION_UUID_KEY, location.getUuid());
         startActivity(startTrainingIntent);
     }
+
+    public void addTraining(final View view) {
+        final Intent addTrainingIntent = new Intent(this, ActivitySubmitTraining.class);
+        addTrainingIntent.putExtra(ActivitySubmitTraining.INTENT_EXTRA_LOCATION_UUID_KEY, location.getUuid());
+        startActivity(addTrainingIntent);
+    }
 }

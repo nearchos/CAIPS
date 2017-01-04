@@ -2,6 +2,7 @@ package org.inspirecenter.indoorpositioningsystem.ui;
 
 import android.Manifest;
 import android.app.ActionBar;
+import android.app.PendingIntent;
 import android.content.*;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
@@ -10,6 +11,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.net.wifi.ScanResult;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.Build;
@@ -30,6 +32,16 @@ import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.google.android.gms.awareness.Awareness;
+import com.google.android.gms.awareness.fence.AwarenessFence;
+import com.google.android.gms.awareness.fence.DetectedActivityFence;
+import com.google.android.gms.awareness.fence.FenceState;
+import com.google.android.gms.awareness.fence.FenceUpdateRequest;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+
+import org.inspirecenter.indoorpositioningsystem.BuildConfig;
 import org.inspirecenter.indoorpositioningsystem.R;
 import org.inspirecenter.indoorpositioningsystem.data.CustomContextElement;
 import org.inspirecenter.indoorpositioningsystem.data.Floor;
@@ -45,7 +57,6 @@ import java.util.*;
  * Created on 16/06/2014.
  */
 public class ActivitySubmitTraining extends AppCompatActivity
-//        implements SensorEventListener
 {
     public static final String TAG = "ips";
 
@@ -61,6 +72,16 @@ public class ActivitySubmitTraining extends AppCompatActivity
     private WifiManager wifiManager;
 
     private SensorManager sensorManager;
+
+    private SharedPreferences sharedPreferences;
+
+    // Declare variable for PendingIntent
+    private PendingIntent fencePendingIntent;
+
+    private GoogleApiClient mGoogleApiClient;
+
+    // The intent action which will be fired when your fence is triggered.
+    private final String FENCE_RECEIVER_ACTION = BuildConfig.APPLICATION_ID + "-FENCE_RECEIVER_ACTION";
 
     @Override public void onCreate(Bundle savedInstanceState)
     {
@@ -84,10 +105,50 @@ public class ActivitySubmitTraining extends AppCompatActivity
 
         locationUuid = getIntent().getStringExtra(INTENT_EXTRA_LOCATION_UUID_KEY);
 
+        final AwarenessFence inVehicleFence = DetectedActivityFence.during(DetectedActivityFence.IN_VEHICLE);
+        final AwarenessFence onBicycleFence = DetectedActivityFence.during(DetectedActivityFence.ON_BICYCLE);
+        final AwarenessFence onFootFence    = DetectedActivityFence.during(DetectedActivityFence.ON_FOOT);
+        final AwarenessFence runningFence   = DetectedActivityFence.during(DetectedActivityFence.RUNNING);
+        final AwarenessFence stillFence     = DetectedActivityFence.during(DetectedActivityFence.STILL);
+        final AwarenessFence walkingFence   = DetectedActivityFence.during(DetectedActivityFence.WALKING);
+        final AwarenessFence tiltingFence   = DetectedActivityFence.during(DetectedActivityFence.TILTING);
+        final AwarenessFence unknownFence   = DetectedActivityFence.during(DetectedActivityFence.UNKNOWN);
+
+        mGoogleApiClient = new GoogleApiClient.Builder(this).addApi(Awareness.API).build();
+        mGoogleApiClient.connect();
+        // Set up the PendingIntent that will be fired when the fence is triggered.
+        fencePendingIntent = PendingIntent.getBroadcast(this, 0, new Intent(FENCE_RECEIVER_ACTION), 0);
+        // The broadcast receiver that will receive intents when a fence is triggered.
+        registerReceiver(contextSensorEventListener, new IntentFilter(FENCE_RECEIVER_ACTION));
+
+        Awareness.FenceApi.updateFences(
+                mGoogleApiClient,
+                new FenceUpdateRequest.Builder()
+                        .addFence("inVehicleFence", inVehicleFence, fencePendingIntent)
+                        .addFence("onBicycleFence", onBicycleFence, fencePendingIntent)
+                        .addFence("onFootFence", onFootFence, fencePendingIntent)
+                        .addFence("runningFence", runningFence, fencePendingIntent)
+                        .addFence("stillFence", stillFence, fencePendingIntent)
+                        .addFence("walkingFence", walkingFence, fencePendingIntent)
+                        .addFence("tiltingFence", tiltingFence, fencePendingIntent)
+                        .addFence("unknownFence", unknownFence, fencePendingIntent)
+                        .build())
+                .setResultCallback(new ResultCallback<Status>() {
+                    @Override
+                    public void onResult(@NonNull Status status) {
+                        if (status.isSuccess()) {
+                            Log.i(TAG, "Fence was successfully registered.");
+                        } else {
+                            Log.e(TAG, "Fence could not be registered: " + status);
+                        }                    }
+                });
+
         wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
 
         // initialize environment sensors
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         scanResultsNotifier = new ScanResultsNotifier();
         contextSensorEventListener = new ContextSensorEventListener();
@@ -221,13 +282,19 @@ public class ActivitySubmitTraining extends AppCompatActivity
                 final double [] coordinates = trainingView.getSelectedCoordinates();
 
                 final List<ScanResult> scanResults = wifiManager.getScanResults();
+
+                // update connected wifi context as needed
+                final WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+                contextSensorEventListener.onWifiScanCompleted(wifiInfo, scanResults);
+
                 final String radiomapAsJsonArray = getRadiomapAsJsonArray(scanResults);
                 final String contextAsJsonArray = contextSensorEventListener.getContextAsJsonArray();
                 final double lat = coordinates[0];
                 final double lng = coordinates[1];
                 Log.d(TAG, "selected lat: " + lat + ", lng: " + lng);
 
-                final String createdBy = PreferenceManager.getDefaultSharedPreferences(context)
+                final String createdBy = PreferenceManager
+                        .getDefaultSharedPreferences(context)
                         .getString(ActivityAuthenticate.KEY_ACCOUNT_NAME, null);
 
                 final Training training = new Training(
@@ -248,8 +315,6 @@ public class ActivitySubmitTraining extends AppCompatActivity
             }
         }
     }
-
-//    public static final IntentFilter BATTERY_INTENT_FILTER = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
 
     private String getRadiomapAsJsonArray(final List<ScanResult> scanResults) {
         final StringBuilder contextStringBuilder = new StringBuilder("[\n");
@@ -305,6 +370,9 @@ public class ActivitySubmitTraining extends AppCompatActivity
         // register for battery updates
         registerReceiver(contextSensorEventListener, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
 
+        // register for user activity updates
+        //todo
+
         // register for light updates
         final Sensor lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
         if(lightSensor != null) sensorManager.registerListener(contextSensorEventListener, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
@@ -351,7 +419,7 @@ public class ActivitySubmitTraining extends AppCompatActivity
         sensorManager.unregisterListener(contextSensorEventListener);
     }
 
-    public class ContextSensorEventListener extends BroadcastReceiver  implements SensorEventListener {
+    public class ContextSensorEventListener extends BroadcastReceiver implements SensorEventListener {
 
         final Map<String,String> latestValues = new HashMap<>();
 
@@ -359,8 +427,10 @@ public class ActivitySubmitTraining extends AppCompatActivity
             super();
 
             // add constant context (make, model, etc.)
-            latestValues.put("make", "[ \"" + Build.MANUFACTURER + "\" ]");
-            latestValues.put("model", "[ \"" + Build.MODEL + "\" ]");
+            latestValues.put(ContextType.DEVICE_MANUFACTURER.getName(), "[ \"" + Build.MANUFACTURER + "\" ]");
+            latestValues.put(ContextType.DEVICE_MODEL.getName(), "[ \"" + Build.MODEL + "\" ]");
+
+            latestValues.put(ContextType.USER_ACTIVITY.getName(), "[ \"unknown\", \"unknown\", \"" + System.currentTimeMillis() + "\"]");
 
             // add custom context
             final DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(ActivitySubmitTraining.this);
@@ -375,7 +445,13 @@ public class ActivitySubmitTraining extends AppCompatActivity
         String getContextAsJsonArray() {
             final StringBuilder contextStringBuilder = new StringBuilder("[\n");
             int num = 0;
+            final Vector<String> selectedKeys = new Vector<>();
             for(final String key : latestValues.keySet()) {
+                final boolean isChecked = sharedPreferences.getBoolean(key, false);
+                if(isChecked) selectedKeys.add(key);
+            }
+
+            for(final String key : selectedKeys) {
                 contextStringBuilder.append("  { \"").append(key).append("\": ")
                         .append(latestValues.get(key)).append(" }");
                 contextStringBuilder.append(++num < latestValues.size() ? ",\n" : "\n");
@@ -386,25 +462,47 @@ public class ActivitySubmitTraining extends AppCompatActivity
             return contextStringBuilder.toString();
         }
 
+        void onWifiScanCompleted(final WifiInfo wifiInfo, final List<ScanResult> scanResults) {
+            final boolean connectedWifiMacAddressOption = sharedPreferences.getBoolean(ContextType.CONNECTED_WIFI_MAC_ADDRESS.getName(), true);
+            final boolean connectedWifiSignalStrengthOption = sharedPreferences.getBoolean(ContextType.CONNECTED_WIFI_SIGNAL_STRENGTH.getName(), true);
+            final String connectedWifiMacAddress = wifiInfo.getBSSID();
+            if(connectedWifiMacAddressOption) {
+                latestValues.put(ContextType.CONNECTED_WIFI_MAC_ADDRESS.getName(), "[ \"" + connectedWifiMacAddress + "\" ]");
+            }
+            int connectedWifiSignalStrength = Integer.MIN_VALUE;
+            for(final ScanResult scanResult : scanResults) {
+                if(scanResult.BSSID.equals(connectedWifiMacAddress))
+                    connectedWifiSignalStrength = scanResult.level;
+            }
+            if(connectedWifiSignalStrengthOption) {
+                latestValues.put(ContextType.CONNECTED_WIFI_SIGNAL_STRENGTH.getName(), "[ " + Integer.toString(connectedWifiSignalStrength) + " ]");
+            }
+        }
+
         @Override
-        public void onReceive(Context context, Intent batteryStatusIntent) {
+        public void onReceive(Context context, Intent intent) {
 
-            if(Intent.ACTION_BATTERY_CHANGED.equals(batteryStatusIntent.getAction())) {
-                int level = batteryStatusIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-                int scale = batteryStatusIntent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+            if(Intent.ACTION_BATTERY_CHANGED.equals(intent.getAction())) {
+                int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+                int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
                 float batteryPct = 100f * level / scale;
-                int status = batteryStatusIntent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+                int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
 
-                latestValues.put("battery-level", "[ \"" + batteryPct + "%\" ]");
+                latestValues.put(ContextType.BATTERY_LEVEL.getName(), "[ \"" + batteryPct + "%\" ]");
 
                 boolean isFull = status == BatteryManager.BATTERY_STATUS_FULL;
                 boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || isFull;
-                int chargePlug = batteryStatusIntent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+                int chargePlug = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
                 boolean usbCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_USB;
                 boolean acCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_AC;
                 final String chargingState = isCharging ? ("charging " + (isFull ? "(full)" : "") + (usbCharge ? " via usb charge" : "") + (acCharge ? " via ac charge" : "")) : "discharging";
 
-                latestValues.put("battery-charging-state", "[ \"" + chargingState + "\" ]");
+                latestValues.put(ContextType.CHARGING_STATE.getName(), "[ \"" + chargingState + "\" ]");
+            } else if(ActivityContextSettings.FENCE_RECEIVER_ACTION.equals(intent.getAction())) {
+                final FenceState fenceState = FenceState.extract(intent);
+                final String userActivity = ActivityContextSettings.translateFenceKey(fenceState.getFenceKey());
+                latestValues.put(ContextType.USER_ACTIVITY.getName(), "[\"" + userActivity + "\", \" + fenceState + \", \"" + System.currentTimeMillis() + "\"]");
+                Log.d(TAG, "fence key: " + fenceState.getFenceKey() + ", fenceState: " + fenceState);
             }
         }
 
@@ -412,46 +510,46 @@ public class ActivitySubmitTraining extends AppCompatActivity
         public void onSensorChanged(SensorEvent sensorEvent) {
             switch (sensorEvent.sensor.getType()) {
                 case Sensor.TYPE_LIGHT:
-                    latestValues.put("luminosity", "[ " + sensorEvent.values[0] + " ]");
+                    latestValues.put(ContextType.LUMINOSITY.getName(), "[ " + sensorEvent.values[0] + " ]");
                     return;
                 case Sensor.TYPE_AMBIENT_TEMPERATURE:
-                    latestValues.put("temperature", "[ " + sensorEvent.values[0] + " ]");
+                    latestValues.put(ContextType.AMBIENT_TEMPERATURE.getName(), "[ " + sensorEvent.values[0] + " ]");
                     return;
                 case Sensor.TYPE_PRESSURE:
-                    latestValues.put("pressure", "[ " + sensorEvent.values[0] + " ]");
+                    latestValues.put(ContextType.AMBIENT_AIR_PRESSURE.getName(), "[ " + sensorEvent.values[0] + " ]");
                     return;
                 case Sensor.TYPE_RELATIVE_HUMIDITY:
-                    latestValues.put("humidity", "[ " + sensorEvent.values[0] + " ]");
+                    latestValues.put(ContextType.RELATIVE_HUMIDITY.getName(), "[ " + sensorEvent.values[0] + " ]");
                     return;
                 case Sensor.TYPE_ACCELEROMETER:
                     String aX = String.format(Locale.US, "%.2f", sensorEvent.values[0]);
                     String aY = String.format(Locale.US, "%.2f", sensorEvent.values[1]);
                     String aZ = String.format(Locale.US, "%.2f", sensorEvent.values[2]);
-                    latestValues.put("acceleration", "[ " + aX + ", " + aY + ", " + aZ + " ]");
+                    latestValues.put(ContextType.ACCELERATION.getName(), "[ " + aX + ", " + aY + ", " + aZ + " ]");
                     return;
                 case Sensor.TYPE_MAGNETIC_FIELD:
                     String mfX = String.format(Locale.US, "%.2f", sensorEvent.values[0]);
                     String mfY = String.format(Locale.US, "%.2f", sensorEvent.values[1]);
                     String mfZ = String.format(Locale.US, "%.2f", sensorEvent.values[2]);
-                    latestValues.put("magnetic-field", "[ " + mfX + ", " + mfY + ", " + mfZ + " ]");
+                    latestValues.put(ContextType.MAGNETIC_FIELD.getName(), "[ " + mfX + ", " + mfY + ", " + mfZ + " ]");
                     return;
                 case Sensor.TYPE_GRAVITY:
                     String gX = String.format(Locale.US, "%.2f", sensorEvent.values[0]);
                     String gY = String.format(Locale.US, "%.2f", sensorEvent.values[1]);
                     String gZ = String.format(Locale.US, "%.2f", sensorEvent.values[2]);
-                    latestValues.put("magnetic-field", "[ " + gX + ", " + gY + ", " + gZ + " ]");
+                    latestValues.put(ContextType.GRAVITY.getName(), "[ " + gX + ", " + gY + ", " + gZ + " ]");
                     return;
                 case Sensor.TYPE_GYROSCOPE:
                     String gyX = String.format(Locale.US, "%.2f", sensorEvent.values[0]);
                     String gyY = String.format(Locale.US, "%.2f", sensorEvent.values[1]);
                     String gyZ = String.format(Locale.US, "%.2f", sensorEvent.values[2]);
-                    latestValues.put("gyroscope", "[ " + gyX + ", " + gyY + ", " + gyZ + " ]");
+                    latestValues.put(ContextType.GYROSCOPE.getName(), "[ " + gyX + ", " + gyY + ", " + gyZ + " ]");
                     return;
                 case Sensor.TYPE_ROTATION_VECTOR:
                     String rvX = String.format(Locale.US, "%.2f", sensorEvent.values[0]);
                     String rvY = String.format(Locale.US, "%.2f", sensorEvent.values[1]);
                     String rvZ = String.format(Locale.US, "%.2f", sensorEvent.values[2]);
-                    latestValues.put("rotation-vector", "[ " + rvX + ", " + rvY + ", " + rvZ + " ]");
+                    latestValues.put(ContextType.ROTATION_VECTOR.getName(), "[ " + rvX + ", " + rvY + ", " + rvZ + " ]");
                     return;
                 default:
                     Log.e(TAG, "Unknown or unexpected sensor type: " + sensorEvent.sensor.getType());
@@ -463,5 +561,4 @@ public class ActivitySubmitTraining extends AppCompatActivity
             // nothing for now
         }
     }
-
 }

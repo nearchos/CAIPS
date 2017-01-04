@@ -1,6 +1,7 @@
 package org.inspirecenter.indoorpositioningsystem.ui;
 
 import android.app.ActionBar;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -10,16 +11,29 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.preference.CheckBoxPreference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
 
+import com.google.android.gms.awareness.Awareness;
+import com.google.android.gms.awareness.fence.AwarenessFence;
+import com.google.android.gms.awareness.fence.DetectedActivityFence;
+import com.google.android.gms.awareness.fence.FenceState;
+import com.google.android.gms.awareness.fence.FenceUpdateRequest;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+
+import org.inspirecenter.indoorpositioningsystem.BuildConfig;
 import org.inspirecenter.indoorpositioningsystem.R;
 
 import java.util.Locale;
@@ -27,6 +41,18 @@ import java.util.Locale;
 public class ActivityContextSettings extends AppCompatActivity {
 
     public static final String TAG = "ips";
+
+    // Declare variable for PendingIntent
+    private PendingIntent fencePendingIntent;
+
+    private ActivityFenceReceiver activityFenceReceiver;
+
+    private GoogleApiClient mGoogleApiClient;
+
+    // The intent action which will be fired when your fence is triggered.
+    public static final String FENCE_RECEIVER_ACTION = BuildConfig.APPLICATION_ID + "-FENCE_RECEIVER_ACTION";
+
+    private SettingsFragment settingsFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,10 +62,63 @@ public class ActivityContextSettings extends AppCompatActivity {
         if(actionBar != null) actionBar.setDisplayHomeAsUpEnabled(true);
 
         // Display the fragment as the main content.
+        settingsFragment = new SettingsFragment();
         getFragmentManager()
                 .beginTransaction()
-                .replace(android.R.id.content, new SettingsFragment())
+                .replace(android.R.id.content, settingsFragment)
                 .commit();
+
+        final AwarenessFence inVehicleFence = DetectedActivityFence.during(DetectedActivityFence.IN_VEHICLE);
+        final AwarenessFence onBicycleFence = DetectedActivityFence.during(DetectedActivityFence.ON_BICYCLE);
+        final AwarenessFence onFootFence    = DetectedActivityFence.during(DetectedActivityFence.ON_FOOT);
+        final AwarenessFence runningFence   = DetectedActivityFence.during(DetectedActivityFence.RUNNING);
+        final AwarenessFence stillFence     = DetectedActivityFence.during(DetectedActivityFence.STILL);
+        final AwarenessFence walkingFence   = DetectedActivityFence.during(DetectedActivityFence.WALKING);
+        final AwarenessFence tiltingFence   = DetectedActivityFence.during(DetectedActivityFence.TILTING);
+        final AwarenessFence unknownFence   = DetectedActivityFence.during(DetectedActivityFence.UNKNOWN);
+
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(Awareness.API)
+                .build();
+
+        mGoogleApiClient.connect();
+        // Set up the PendingIntent that will be fired when the fence is triggered.
+        fencePendingIntent = PendingIntent.getBroadcast(this, 0, new Intent(FENCE_RECEIVER_ACTION), 0);
+        // The broadcast receiver that will receive intents when a fence is triggered.
+        activityFenceReceiver = new ActivityFenceReceiver();
+        registerReceiver(activityFenceReceiver, new IntentFilter(FENCE_RECEIVER_ACTION));
+
+        Awareness.FenceApi.updateFences(
+                mGoogleApiClient,
+                new FenceUpdateRequest.Builder()
+                    .addFence("inVehicleFence", inVehicleFence, fencePendingIntent)
+                    .addFence("onBicycleFence", onBicycleFence, fencePendingIntent)
+                    .addFence("onFootFence", onFootFence, fencePendingIntent)
+                    .addFence("runningFence", runningFence, fencePendingIntent)
+                    .addFence("stillFence", stillFence, fencePendingIntent)
+                    .addFence("walkingFence", walkingFence, fencePendingIntent)
+                    .addFence("tiltingFence", tiltingFence, fencePendingIntent)
+                    .addFence("unknownFence", unknownFence, fencePendingIntent)
+                    .build())
+                .setResultCallback(new ResultCallback<Status>() {
+                    @Override
+                    public void onResult(@NonNull Status status) {
+                        if (status.isSuccess()) {
+                            Log.i(TAG, "Fence was successfully registered.");
+                        } else {
+                            Log.e(TAG, "Fence could not be registered: " + status);
+                        }                    }
+                });
+    }
+
+    @Override
+    public void onDestroy() {
+        try {
+            unregisterReceiver(activityFenceReceiver); // don't forget to unregister the receiver
+        } catch (Exception e) {
+            Log.e(TAG, e.getMessage());
+        }
+        super.onDestroy();
     }
 
     @Override
@@ -62,6 +141,11 @@ public class ActivityContextSettings extends AppCompatActivity {
         CheckBoxPreference batteryLevelCheckBoxPreference;
         CheckBoxPreference chargingStateCheckBoxPreference;
 
+        CheckBoxPreference connectedWifiMacAddressCheckBoxPreference;
+        CheckBoxPreference connectedWifiSignalStrengthCheckBoxPreference;
+
+        CheckBoxPreference userActivityCheckBoxPreference;
+
         CheckBoxPreference lightCheckBoxPreference;
         CheckBoxPreference temperatureCheckBoxPreference;
         CheckBoxPreference pressureCheckBoxPreference;
@@ -76,6 +160,8 @@ public class ActivityContextSettings extends AppCompatActivity {
         private SensorManager sensorManager;
         private final ContextReceiver contextReceiver;
         private final SensorEventListener sensorEventListener;
+
+        private WifiManager wifiManager;
 
         private SharedPreferences sharedPreferences;
 
@@ -92,6 +178,7 @@ public class ActivityContextSettings extends AppCompatActivity {
             addPreferencesFromResource(R.xml.context_settings);
 
             sensorManager = (SensorManager) getActivity().getSystemService(Context.SENSOR_SERVICE);
+            wifiManager = (WifiManager) getActivity().getSystemService(Context.WIFI_SERVICE);
             sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
         }
 
@@ -100,24 +187,48 @@ public class ActivityContextSettings extends AppCompatActivity {
             super.onResume();
 
             {
-                deviceBrandCheckBoxPreference = (CheckBoxPreference) findPreference("device_brand");
-                deviceBrandCheckBoxPreference.setChecked(sharedPreferences.getBoolean("device_brand", true));
-                deviceBrandCheckBoxPreference.setSummary("Manufacturer: " + Build.MANUFACTURER + ", Model: " + Build.MODEL);
+                deviceBrandCheckBoxPreference = (CheckBoxPreference) findPreference(ContextType.DEVICE_MANUFACTURER.getName());
+                deviceBrandCheckBoxPreference.setChecked(sharedPreferences.getBoolean(ContextType.DEVICE_MANUFACTURER.getName(), true));
+                deviceBrandCheckBoxPreference.setSummary("Device manufacturer: " + Build.MANUFACTURER);
             }
 
             {
-                batteryLevelCheckBoxPreference = (CheckBoxPreference) findPreference("battery_level");
-                batteryLevelCheckBoxPreference.setChecked(sharedPreferences.getBoolean("battery_level", true));
+                deviceBrandCheckBoxPreference = (CheckBoxPreference) findPreference(ContextType.DEVICE_MODEL.getName());
+                deviceBrandCheckBoxPreference.setChecked(sharedPreferences.getBoolean(ContextType.DEVICE_MODEL.getName(), true));
+                deviceBrandCheckBoxPreference.setSummary("Device model: " + Build.MODEL);
+            }
 
-                chargingStateCheckBoxPreference = (CheckBoxPreference) findPreference("charging_state");
-                chargingStateCheckBoxPreference.setChecked(sharedPreferences.getBoolean("charging_state", true));
+            {
+                batteryLevelCheckBoxPreference = (CheckBoxPreference) findPreference(ContextType.BATTERY_LEVEL.getName());
+                batteryLevelCheckBoxPreference.setChecked(sharedPreferences.getBoolean(ContextType.BATTERY_LEVEL.getName(), true));
+
+                chargingStateCheckBoxPreference = (CheckBoxPreference) findPreference(ContextType.CHARGING_STATE.getName());
+                chargingStateCheckBoxPreference.setChecked(sharedPreferences.getBoolean(ContextType.CHARGING_STATE.getName(), true));
 
                 final Intent batteryStatus = getActivity().registerReceiver(contextReceiver, batteryIntentFilter);
                 handleBatteryIntent(batteryStatus);
             }
 
             {
-                lightCheckBoxPreference = (CheckBoxPreference) findPreference("light");
+                final WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+                String accessPointMacAddress = wifiInfo == null ? "not connected" : wifiInfo.getBSSID();
+
+                connectedWifiMacAddressCheckBoxPreference = (CheckBoxPreference) findPreference(ContextType.CONNECTED_WIFI_MAC_ADDRESS.getName());
+                connectedWifiMacAddressCheckBoxPreference.setChecked(sharedPreferences.getBoolean(ContextType.CONNECTED_WIFI_MAC_ADDRESS.getName(), true));
+                connectedWifiMacAddressCheckBoxPreference.setSummary("MAC address of connected Access Point: " + accessPointMacAddress);
+
+
+                connectedWifiSignalStrengthCheckBoxPreference = (CheckBoxPreference) findPreference(ContextType.CONNECTED_WIFI_SIGNAL_STRENGTH.getName());
+                connectedWifiSignalStrengthCheckBoxPreference.setChecked(sharedPreferences.getBoolean(ContextType.CONNECTED_WIFI_SIGNAL_STRENGTH.getName(), true));
+            }
+
+            {
+                userActivityCheckBoxPreference = (CheckBoxPreference) findPreference(ContextType.USER_ACTIVITY.getName());
+                userActivityCheckBoxPreference.setChecked((sharedPreferences.getBoolean(ContextType.USER_ACTIVITY.getName(), true)));
+            }
+
+            {
+                lightCheckBoxPreference = (CheckBoxPreference) findPreference(ContextType.LUMINOSITY.getName());
 //                lightCheckBoxPreference.setChecked(sharedPreferences.getBoolean("light", true));
 
                 final Sensor lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
@@ -131,8 +242,8 @@ public class ActivityContextSettings extends AppCompatActivity {
             }
 
             {
-                temperatureCheckBoxPreference = (CheckBoxPreference) findPreference("temperature");
-                temperatureCheckBoxPreference.setChecked(sharedPreferences.getBoolean("temperature", true));
+                temperatureCheckBoxPreference = (CheckBoxPreference) findPreference(ContextType.AMBIENT_TEMPERATURE.getName());
+                temperatureCheckBoxPreference.setChecked(sharedPreferences.getBoolean(ContextType.AMBIENT_TEMPERATURE.getName(), true));
 
                 final Sensor temperatureSensor = sensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
                 if(temperatureSensor == null) {
@@ -145,8 +256,8 @@ public class ActivityContextSettings extends AppCompatActivity {
             }
 
             {
-                pressureCheckBoxPreference = (CheckBoxPreference) findPreference("pressure");
-                pressureCheckBoxPreference.setChecked(sharedPreferences.getBoolean("pressure", true));
+                pressureCheckBoxPreference = (CheckBoxPreference) findPreference(ContextType.AMBIENT_AIR_PRESSURE.getName());
+                pressureCheckBoxPreference.setChecked(sharedPreferences.getBoolean(ContextType.AMBIENT_AIR_PRESSURE.getName(), true));
 
                 final Sensor pressureSensor = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
                 if(pressureSensor == null) {
@@ -159,8 +270,8 @@ public class ActivityContextSettings extends AppCompatActivity {
             }
 
             {
-                humidityCheckBoxPreference = (CheckBoxPreference) findPreference("humidity");
-                humidityCheckBoxPreference.setChecked(sharedPreferences.getBoolean("humidity", true));
+                humidityCheckBoxPreference = (CheckBoxPreference) findPreference(ContextType.RELATIVE_HUMIDITY.getName());
+                humidityCheckBoxPreference.setChecked(sharedPreferences.getBoolean(ContextType.RELATIVE_HUMIDITY.getName(), true));
 
                 final Sensor humiditySensor = sensorManager.getDefaultSensor(Sensor.TYPE_RELATIVE_HUMIDITY);
                 if(humiditySensor == null) {
@@ -173,8 +284,8 @@ public class ActivityContextSettings extends AppCompatActivity {
             }
 
             {
-                accelerometerCheckBoxPreference = (CheckBoxPreference) findPreference("acceleration");
-                accelerometerCheckBoxPreference.setChecked(sharedPreferences.getBoolean("acceleration", true));
+                accelerometerCheckBoxPreference = (CheckBoxPreference) findPreference(ContextType.ACCELERATION.getName());
+                accelerometerCheckBoxPreference.setChecked(sharedPreferences.getBoolean(ContextType.ACCELERATION.getName(), true));
 
                 final Sensor accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
                 if(accelerometerSensor == null) {
@@ -187,8 +298,8 @@ public class ActivityContextSettings extends AppCompatActivity {
             }
 
             {
-                magnetometerCheckBoxPreference = (CheckBoxPreference) findPreference("magnetic_field");
-                magnetometerCheckBoxPreference.setChecked(sharedPreferences.getBoolean("magnetic_field", true));
+                magnetometerCheckBoxPreference = (CheckBoxPreference) findPreference(ContextType.MAGNETIC_FIELD.getName());
+                magnetometerCheckBoxPreference.setChecked(sharedPreferences.getBoolean(ContextType.MAGNETIC_FIELD.getName(), true));
 
                 final Sensor magnetometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
                 if(magnetometerSensor == null) {
@@ -201,8 +312,8 @@ public class ActivityContextSettings extends AppCompatActivity {
             }
 
             {
-                gravityCheckBoxPreference = (CheckBoxPreference) findPreference("gravity");
-                gravityCheckBoxPreference.setChecked(sharedPreferences.getBoolean("gravity", true));
+                gravityCheckBoxPreference = (CheckBoxPreference) findPreference(ContextType.GRAVITY.getName());
+                gravityCheckBoxPreference.setChecked(sharedPreferences.getBoolean(ContextType.GRAVITY.getName(), true));
 
                 final Sensor gravitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
                 if(gravitySensor == null) {
@@ -215,8 +326,8 @@ public class ActivityContextSettings extends AppCompatActivity {
             }
 
             {
-                gyroscopeCheckBoxPreference = (CheckBoxPreference) findPreference("gyroscope");
-                gyroscopeCheckBoxPreference.setChecked(sharedPreferences.getBoolean("gyroscope", true));
+                gyroscopeCheckBoxPreference = (CheckBoxPreference) findPreference(ContextType.GYROSCOPE.getName());
+                gyroscopeCheckBoxPreference.setChecked(sharedPreferences.getBoolean(ContextType.GYROSCOPE.getName(), true));
 
                 final Sensor gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
                 if(gyroscopeSensor == null) {
@@ -229,8 +340,8 @@ public class ActivityContextSettings extends AppCompatActivity {
             }
 
             {
-                rotationVectorCheckBoxPreference = (CheckBoxPreference) findPreference("rotation_vector");
-                rotationVectorCheckBoxPreference.setChecked(sharedPreferences.getBoolean("rotation_vector", true));
+                rotationVectorCheckBoxPreference = (CheckBoxPreference) findPreference(ContextType.ROTATION_VECTOR.getName());
+                rotationVectorCheckBoxPreference.setChecked(sharedPreferences.getBoolean(ContextType.ROTATION_VECTOR.getName(), true));
 
                 final Sensor rotationVectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
                 if(rotationVectorSensor == null) {
@@ -320,6 +431,12 @@ public class ActivityContextSettings extends AppCompatActivity {
             chargingStateCheckBoxPreference.setSummary("Battery sensor: " + chargingState);
         }
 
+        void handleUserActivityIntent(final Intent userActivityIntent) {
+            final FenceState fenceState = FenceState.extract(userActivityIntent);
+            final String fenceKey = fenceState.getFenceKey();
+            userActivityCheckBoxPreference.setSummary(getString(R.string.user_activity_summary) + ": " + translateFenceKey(fenceKey));
+        }
+
         private void handleLightSensorEvent(final SensorEvent sensorEvent) {
             final float currentReading = sensorEvent.values[0];
             lightCheckBoxPreference.setSummary("Light sensor: " + currentReading + " lx (of max " + sensorEvent.sensor.getMaximumRange() + " lx)");
@@ -373,6 +490,123 @@ public class ActivityContextSettings extends AppCompatActivity {
             String mfY = String.format(Locale.US, "%.2f", sensorEvent.values[1]);
             String mfZ = String.format(Locale.US, "%.2f", sensorEvent.values[2]);
             rotationVectorCheckBoxPreference.setSummary("Currently X: " + mfX + ", Y: " + mfY + ", Z: " + mfZ);
+        }
+    }
+
+//    protected void registerFence(final String fenceKey, final AwarenessFence fence) {
+//        Awareness.FenceApi.updateFences(
+//                mGoogleApiClient,
+//                new FenceUpdateRequest.Builder()
+//                        .addFence(fenceKey, fence, fencePendingIntent)
+//                        .build()
+//        ).setResultCallback(new ResultCallback<Status>() {
+//            @Override
+//            public void onResult(@NonNull Status status) {
+//                if(status.isSuccess()) {
+//                    Log.i(TAG, "Fence was successfully registered.");
+//                    queryFence(fenceKey);
+//                } else {
+//                    Log.e(TAG, "Fence could not be registered: " + status);
+//                }
+//            }
+//        });
+//    }
+
+//    protected void unregisterFence(final String fenceKey) {
+//        Awareness.FenceApi.updateFences(
+//                mGoogleApiClient,
+//                new FenceUpdateRequest.Builder()
+//                        .removeFence(fenceKey)
+//                        .build()
+//        ).setResultCallback(new ResultCallbacks<Status>() {
+//            @Override
+//            public void onSuccess(@NonNull Status status) {
+//                Log.i(TAG, "Fence " + fenceKey + " successfully removed.");
+//            }
+//
+//            @Override
+//            public void onFailure(@NonNull Status status) {
+//                Log.i(TAG, "Fence " + fenceKey + " could NOT be removed.");
+//            }
+//        });
+//    }
+
+//    protected void queryFence(final String fenceKey) {
+//        Awareness.FenceApi.queryFences(mGoogleApiClient,
+//                FenceQueryRequest.forFences(Arrays.asList(fenceKey)))
+//                .setResultCallback(new ResultCallback<FenceQueryResult>() {
+//                    @Override
+//                    public void onResult(@NonNull FenceQueryResult fenceQueryResult) {
+//                        if (!fenceQueryResult.getStatus().isSuccess()) {
+//                            Log.e(TAG, "Could not query fence: " + fenceKey);
+//                            return;
+//                        }
+//                        FenceStateMap map = fenceQueryResult.getFenceStateMap();
+//                        for (String fenceKey : map.getFenceKeys()) {
+//                            FenceState fenceState = map.getFenceState(fenceKey);
+//                            Log.i(TAG, "Fence " + fenceKey + ": "
+//                                    + fenceState.getCurrentState()
+//                                    + ", was="
+//                                    + fenceState.getPreviousState()
+//                                    + ", lastUpdateTime="
+//                                    + new Date(fenceState.getLastFenceUpdateTimeMillis()));
+//                        }
+//                    }
+//                });
+//    }
+
+    public static String translateFenceKey(final String fenceKey) {
+        switch (fenceKey) {
+            case "inVehicleFence":
+                return "in vehicle";
+            case "onBicycleFence":
+                return "on bicycle";
+            case "onFootFence":
+                return "on foot";
+            case "runningFence":
+                return "running";
+            case "stillFence":
+                return "still";
+            case "walkingFence":
+                return "walking";
+            case "tiltingFence":
+                return "tilting";
+            case "unknownFence":
+            default:
+                return "unknown activity";
+        }
+    }
+
+    public class ActivityFenceReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final FenceState fenceState = FenceState.extract(intent);
+
+            Log.i(TAG, "fence key: " + fenceState.getFenceKey() + ", fenceState: " + fenceState);
+            settingsFragment.handleUserActivityIntent(intent);
+
+//            inVehicleFence
+//            onBicycleFence
+//            onFootFence
+//            runningFence
+//            stillFence
+//            walkingFence
+//            tiltingFence
+//            unknownFence
+
+//            if (TextUtils.equals(fenceState.getFenceKey(), "inVehicleFence")) { // todo
+//                switch(fenceState.getCurrentState()) {
+//                    case FenceState.TRUE:
+//                        Log.i(TAG, "Headphones are plugged in.");
+//                        break;
+//                    case FenceState.FALSE:
+//                        Log.i(TAG, "Headphones are NOT plugged in.");
+//                        break;
+//                    case FenceState.UNKNOWN:
+//                        Log.i(TAG, "The headphone fence is in an unknown state.");
+//                        break;
+//                }
+//            }
         }
     }
 }

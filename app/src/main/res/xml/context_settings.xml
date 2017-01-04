@@ -6,40 +6,66 @@
         android:title="Hardware sensors"/>
 
     <CheckBoxPreference
-        android:key="device_brand"
+        android:key="device-manufacturer"
         android:title="Device brand"
-        android:summary="Details about the device manufacturer and model"/>
+        android:summary="Details about the device manufacturer"/>
 
     <CheckBoxPreference
-        android:key="battery_level"
+        android:key="device-model"
+        android:title="Device model"
+        android:summary="Details about the device model"/>
+
+    <CheckBoxPreference
+        android:key="battery-level"
         android:title="Battery level"
         android:summary="Percentage of battery remaining (1..100)"/>
 
     <CheckBoxPreference
-        android:key="charging_state"
+        android:key="charging-state"
         android:title="Charging state"
         android:summary="Whether the device is currently charging"/>
+
+    <PreferenceCategory
+        android:title="Network"/>
+
+    <CheckBoxPreference
+        android:key="connected-wifi-mac-address"
+        android:title="Connected Access Point MAC Address"
+        android:summary="MAC address of connected Access Point"/>
+
+    <CheckBoxPreference
+        android:key="connected-wifi-signal-strength"
+        android:title="Connected Access Point Signal Strength"
+        android:summary="Signal strength of connected Access Point"/>
+
+    <PreferenceCategory
+        android:title="User sensors"/>
+
+    <CheckBoxPreference
+        android:key="user-activity"
+        android:title="User activity"
+        android:summary="@string/user_activity_summary"/>
 
     <PreferenceCategory
         android:title="Environment sensors"/>
 
     <CheckBoxPreference
-        android:key="light"
+        android:key="luminosity"
         android:title="Light state"
         android:summary="Luminosity sensed by the device's light sensor"/>
 
     <CheckBoxPreference
-        android:key="temperature"
+        android:key="ambient-temperature"
         android:title="Ambient temperature"
         android:summary="Ambient temperature of the air"/>
 
     <CheckBoxPreference
-        android:key="pressure"
+        android:key="ambient-air-pressure"
         android:title="Ambient air pressure"
         android:summary="Ambient pressure of the air"/>
 
     <CheckBoxPreference
-        android:key="humidity"
+        android:key="relative-humidity"
         android:title="Relative humidity"
         android:summary="Ambient relative humidity"/>
 
@@ -57,7 +83,7 @@
         android:summary="Acceleration over the X, Y, Z axis"/>
 
     <CheckBoxPreference
-        android:key="magnetic_field"
+        android:key="magnetic-field"
         android:title="Magnetic field"
         android:summary="Magnetic field over the X, Y, Z axis"/>
 
@@ -72,7 +98,7 @@
         android:summary="Gyroscope measurement over the X, Y, Z axis"/>
 
     <CheckBoxPreference
-        android:key="rotation_vector"
+        android:key="rotation-vector"
         android:title="Rotation vector"
         android:summary="Rotation vector over the X, Y, Z axis"/>
 

@@ -73,9 +73,13 @@ public class ActivityTrainings extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 final Training training = trainings[position];
-                // TODO add custom training viewer
-                Toast.makeText(ActivityTrainings.this, "Radiomap: " + training.getRadiomapAsJSON(), Toast.LENGTH_SHORT).show();
-                Toast.makeText(ActivityTrainings.this, "Context: " + training.getContextAsJSON(), Toast.LENGTH_SHORT).show();
+                // using custom training viewer
+                final Intent intent = new Intent(ActivityTrainings.this, ActivityTraining.class);
+                intent.putExtra(ActivityTraining.PAYLOAD_TRAINING_INDEX_KEY, position);
+                intent.putExtra(ActivityTraining.PAYLOAD_TRAININGS_KEY, trainings);
+                startActivity(intent);
+//                Toast.makeText(ActivityTrainings.this, "Radiomap: " + training.getRadiomapAsJSON(), Toast.LENGTH_SHORT).show();
+//                Toast.makeText(ActivityTrainings.this, "Context: " + training.getContextAsJSON(), Toast.LENGTH_SHORT).show();
             }
         });
         listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
