@@ -2,7 +2,6 @@ package org.inspirecenter.indoorpositioningsystem.ui;
 
 import android.Manifest;
 import android.app.ActionBar;
-import android.app.PendingIntent;
 import android.content.*;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
@@ -33,15 +32,12 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.google.android.gms.awareness.Awareness;
-import com.google.android.gms.awareness.fence.AwarenessFence;
-import com.google.android.gms.awareness.fence.DetectedActivityFence;
-import com.google.android.gms.awareness.fence.FenceState;
-import com.google.android.gms.awareness.fence.FenceUpdateRequest;
+import com.google.android.gms.awareness.snapshot.DetectedActivityResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.ActivityRecognitionResult;
+import com.google.android.gms.location.DetectedActivity;
 
-import org.inspirecenter.indoorpositioningsystem.BuildConfig;
 import org.inspirecenter.indoorpositioningsystem.R;
 import org.inspirecenter.indoorpositioningsystem.data.CustomContextElement;
 import org.inspirecenter.indoorpositioningsystem.data.Floor;
@@ -49,6 +45,7 @@ import org.inspirecenter.indoorpositioningsystem.data.Location;
 import org.inspirecenter.indoorpositioningsystem.data.Training;
 import org.inspirecenter.indoorpositioningsystem.db.DatabaseHelper;
 import org.inspirecenter.indoorpositioningsystem.db.DatabaseOpenHelper;
+import org.inspirecenter.indoorpositioningsystem.util.DetectedActivityUtil;
 
 import java.util.*;
 
@@ -75,13 +72,7 @@ public class ActivitySubmitTraining extends AppCompatActivity
 
     private SharedPreferences sharedPreferences;
 
-    // Declare variable for PendingIntent
-    private PendingIntent fencePendingIntent;
-
     private GoogleApiClient mGoogleApiClient;
-
-    // The intent action which will be fired when your fence is triggered.
-    private final String FENCE_RECEIVER_ACTION = BuildConfig.APPLICATION_ID + "-FENCE_RECEIVER_ACTION";
 
     @Override public void onCreate(Bundle savedInstanceState)
     {
@@ -105,43 +96,11 @@ public class ActivitySubmitTraining extends AppCompatActivity
 
         locationUuid = getIntent().getStringExtra(INTENT_EXTRA_LOCATION_UUID_KEY);
 
-        final AwarenessFence inVehicleFence = DetectedActivityFence.during(DetectedActivityFence.IN_VEHICLE);
-        final AwarenessFence onBicycleFence = DetectedActivityFence.during(DetectedActivityFence.ON_BICYCLE);
-        final AwarenessFence onFootFence    = DetectedActivityFence.during(DetectedActivityFence.ON_FOOT);
-        final AwarenessFence runningFence   = DetectedActivityFence.during(DetectedActivityFence.RUNNING);
-        final AwarenessFence stillFence     = DetectedActivityFence.during(DetectedActivityFence.STILL);
-        final AwarenessFence walkingFence   = DetectedActivityFence.during(DetectedActivityFence.WALKING);
-        final AwarenessFence tiltingFence   = DetectedActivityFence.during(DetectedActivityFence.TILTING);
-        final AwarenessFence unknownFence   = DetectedActivityFence.during(DetectedActivityFence.UNKNOWN);
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(Awareness.API)
+                .build();
 
-        mGoogleApiClient = new GoogleApiClient.Builder(this).addApi(Awareness.API).build();
         mGoogleApiClient.connect();
-        // Set up the PendingIntent that will be fired when the fence is triggered.
-        fencePendingIntent = PendingIntent.getBroadcast(this, 0, new Intent(FENCE_RECEIVER_ACTION), 0);
-        // The broadcast receiver that will receive intents when a fence is triggered.
-        registerReceiver(contextSensorEventListener, new IntentFilter(FENCE_RECEIVER_ACTION));
-
-        Awareness.FenceApi.updateFences(
-                mGoogleApiClient,
-                new FenceUpdateRequest.Builder()
-                        .addFence("inVehicleFence", inVehicleFence, fencePendingIntent)
-                        .addFence("onBicycleFence", onBicycleFence, fencePendingIntent)
-                        .addFence("onFootFence", onFootFence, fencePendingIntent)
-                        .addFence("runningFence", runningFence, fencePendingIntent)
-                        .addFence("stillFence", stillFence, fencePendingIntent)
-                        .addFence("walkingFence", walkingFence, fencePendingIntent)
-                        .addFence("tiltingFence", tiltingFence, fencePendingIntent)
-                        .addFence("unknownFence", unknownFence, fencePendingIntent)
-                        .build())
-                .setResultCallback(new ResultCallback<Status>() {
-                    @Override
-                    public void onResult(@NonNull Status status) {
-                        if (status.isSuccess()) {
-                            Log.i(TAG, "Fence was successfully registered.");
-                        } else {
-                            Log.e(TAG, "Fence could not be registered: " + status);
-                        }                    }
-                });
 
         wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
 
@@ -258,6 +217,11 @@ public class ActivitySubmitTraining extends AppCompatActivity
         setProgressBarIndeterminateVisibility(true);
         scanButton.setEnabled(false);
         scanButton.setText(R.string.Scanning);
+
+        Awareness.SnapshotApi
+                .getDetectedActivity(mGoogleApiClient)
+                .setResultCallback(contextSensorEventListener);
+
         registerReceiver(scanResultsNotifier, scanResultsAvailableIntentFilter);
         wifiManager.startScan();
     }
@@ -335,7 +299,6 @@ public class ActivitySubmitTraining extends AppCompatActivity
     protected void onResume() {
         super.onResume();
 
-        final Intent intent = getIntent();
         final DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(this);
 
         final Location location = DatabaseHelper.getLocation(databaseOpenHelper.getReadableDatabase(), locationUuid);
@@ -369,9 +332,6 @@ public class ActivitySubmitTraining extends AppCompatActivity
 
         // register for battery updates
         registerReceiver(contextSensorEventListener, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-
-        // register for user activity updates
-        //todo
 
         // register for light updates
         final Sensor lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
@@ -419,7 +379,7 @@ public class ActivitySubmitTraining extends AppCompatActivity
         sensorManager.unregisterListener(contextSensorEventListener);
     }
 
-    public class ContextSensorEventListener extends BroadcastReceiver implements SensorEventListener {
+    public class ContextSensorEventListener extends BroadcastReceiver implements SensorEventListener, ResultCallback<DetectedActivityResult>  {
 
         final Map<String,String> latestValues = new HashMap<>();
 
@@ -480,6 +440,26 @@ public class ActivitySubmitTraining extends AppCompatActivity
         }
 
         @Override
+        public void onResult(@NonNull DetectedActivityResult detectedActivityResult) {
+            if (!detectedActivityResult.getStatus().isSuccess()) {
+                Log.e(TAG, "Could not get the current activity.");
+                latestValues.put(ContextType.USER_ACTIVITY.getName(), "[ \"unknown at 100%\" ]");
+                return;
+            }
+            ActivityRecognitionResult activityRecognitionResult = detectedActivityResult.getActivityRecognitionResult();
+            final List<DetectedActivity> detectedActivities = activityRecognitionResult.getProbableActivities();
+            final StringBuilder userActivityState = new StringBuilder("[ ");
+            for(int i = 0; i < detectedActivities.size(); i++) {
+                final DetectedActivity detectedActivity = detectedActivities.get(i);
+Toast.makeText(ActivitySubmitTraining.this, ">" + detectedActivity, Toast.LENGTH_SHORT).show();
+                userActivityState.append("\"").append(DetectedActivityUtil.toString(detectedActivity)).append("\"");
+                if(i < detectedActivities.size() - 1) userActivityState.append(", "); else userActivityState.append(" ");
+            }
+            userActivityState.append("]");
+            latestValues.put(ContextType.USER_ACTIVITY.getName(), userActivityState.toString());
+        }
+
+        @Override
         public void onReceive(Context context, Intent intent) {
 
             if(Intent.ACTION_BATTERY_CHANGED.equals(intent.getAction())) {
@@ -498,11 +478,6 @@ public class ActivitySubmitTraining extends AppCompatActivity
                 final String chargingState = isCharging ? ("charging " + (isFull ? "(full)" : "") + (usbCharge ? " via usb charge" : "") + (acCharge ? " via ac charge" : "")) : "discharging";
 
                 latestValues.put(ContextType.CHARGING_STATE.getName(), "[ \"" + chargingState + "\" ]");
-            } else if(ActivityContextSettings.FENCE_RECEIVER_ACTION.equals(intent.getAction())) {
-                final FenceState fenceState = FenceState.extract(intent);
-                final String userActivity = ActivityContextSettings.translateFenceKey(fenceState.getFenceKey());
-                latestValues.put(ContextType.USER_ACTIVITY.getName(), "[\"" + userActivity + "\", \" + fenceState + \", \"" + System.currentTimeMillis() + "\"]");
-                Log.d(TAG, "fence key: " + fenceState.getFenceKey() + ", fenceState: " + fenceState);
             }
         }
 
