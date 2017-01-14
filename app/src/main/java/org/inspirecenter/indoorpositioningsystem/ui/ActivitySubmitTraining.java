@@ -451,7 +451,7 @@ public class ActivitySubmitTraining extends AppCompatActivity
             final StringBuilder userActivityState = new StringBuilder("[ ");
             for(int i = 0; i < detectedActivities.size(); i++) {
                 final DetectedActivity detectedActivity = detectedActivities.get(i);
-Toast.makeText(ActivitySubmitTraining.this, ">" + detectedActivity, Toast.LENGTH_SHORT).show();
+//Toast.makeText(ActivitySubmitTraining.this, ">" + detectedActivity, Toast.LENGTH_SHORT).show();
                 userActivityState.append("\"").append(DetectedActivityUtil.toString(detectedActivity)).append("\"");
                 if(i < detectedActivities.size() - 1) userActivityState.append(", "); else userActivityState.append(" ");
             }

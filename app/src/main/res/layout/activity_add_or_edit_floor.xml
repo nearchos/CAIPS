@@ -72,7 +72,6 @@
                     android:selectAllOnFocus="true"
                     android:inputType="number"
                     android:maxLines="1"
-                    android:text="0"
                     android:hint="Sequence"/>
 
             </android.support.design.widget.TextInputLayout>
@@ -92,7 +91,6 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:maxLines="1"
-                        android:text="0,0"
                         android:hint="Top left coordinates"/>
 
                 </android.support.design.widget.TextInputLayout>
@@ -122,7 +120,6 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:maxLines="1"
-                        android:text="0,0"
                         android:hint="Bottom right coordinates"/>
 
                 </android.support.design.widget.TextInputLayout>

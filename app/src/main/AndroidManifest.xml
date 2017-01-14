@@ -36,7 +36,6 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
-
         <meta-data
             android:name="com.google.android.awareness.API_KEY"
             android:value="@string/awareness_api" />
@@ -147,21 +146,22 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ui.ActivityTrainings" />
         </activity>
-
-        <activity android:name=".ui.ActivityCustomContext"
+        <activity
+            android:name=".ui.ActivityCustomContext"
             android:label="@string/Custom_context">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ui.ActivityTrainings" />
         </activity>
-
-        <activity android:name=".ui.ActivityAddCustomContext"
+        <activity
+            android:name=".ui.ActivityAddCustomContext"
             android:label="@string/Add_custom_context">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".ui.ActivityCustomContext" />
         </activity>
-
+        <activity android:name=".ui.ActivityTrainingOnMap" />
+        <activity android:name=".ui.ActivityTrainingsOnMap"></activity>
     </application>
 
 </manifest>

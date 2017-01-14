@@ -34,6 +34,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+import static org.inspirecenter.indoorpositioningsystem.ui.ActivityTraining.PAYLOAD_TRAININGS_KEY;
+
 public class ActivityTrainings extends AppCompatActivity {
 
     public static final String TAG = "ips";
@@ -67,16 +69,16 @@ public class ActivityTrainings extends AppCompatActivity {
     private void updateListView() {
         final DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(this);
         final Training [] trainings = DatabaseHelper.getTrainings(databaseOpenHelper.getReadableDatabase(), locationUuid);
+        databaseOpenHelper.close();
         Log.d(TAG, "trainings: " + trainings.length);
         listView.setAdapter(new TrainingsAdapter(this, trainings));
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                final Training training = trainings[position];
                 // using custom training viewer
                 final Intent intent = new Intent(ActivityTrainings.this, ActivityTraining.class);
                 intent.putExtra(ActivityTraining.PAYLOAD_TRAINING_INDEX_KEY, position);
-                intent.putExtra(ActivityTraining.PAYLOAD_TRAININGS_KEY, trainings);
+                intent.putExtra(ActivityTraining.PAYLOAD_LOCATION_UUID_KEY, locationUuid);
                 startActivity(intent);
 //                Toast.makeText(ActivityTrainings.this, "Radiomap: " + training.getRadiomapAsJSON(), Toast.LENGTH_SHORT).show();
 //                Toast.makeText(ActivityTrainings.this, "Context: " + training.getContextAsJSON(), Toast.LENGTH_SHORT).show();
@@ -141,13 +143,24 @@ public class ActivityTrainings extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
         switch (item.getItemId()) {
-            case android.R.id.home:
+            case android.R.id.home: {
                 finish();
                 return true;
-            case R.id.menu_trainings_context_settings:
+            }
+            case R.id.menu_trainings_on_map: {
+                final DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(this);
+                final Training [] trainings = DatabaseHelper.getTrainings(databaseOpenHelper.getReadableDatabase(), locationUuid);
+                databaseOpenHelper.close();
+                final Intent intent = new Intent(this, ActivityTrainingsOnMap.class);
+                intent.putExtra(PAYLOAD_TRAININGS_KEY, trainings);
+                startActivity(intent);
+                return true;
+            }
+            case R.id.menu_trainings_context_settings: {
                 startActivity(new Intent(this, ActivityContextSettings.class));
                 return true;
-            case R.id.menu_trainings_custom_context:
+            }
+            case R.id.menu_trainings_custom_context: {
                 final Intent intent = new Intent(this, ActivityCustomContext.class);
                 final DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(this);
                 final SQLiteDatabase sqLiteDatabase = databaseOpenHelper.getWritableDatabase();
@@ -155,14 +168,18 @@ public class ActivityTrainings extends AppCompatActivity {
                 intent.putExtra("location", location);
                 startActivity(intent);
                 return true;
-            case R.id.menu_trainings_export:
+            }
+            case R.id.menu_trainings_export: {
                 exportTrainings();
                 return true;
-            case R.id.menu_trainings_delete_all:
+            }
+            case R.id.menu_trainings_delete_all: {
                 deleteAllTrainings();
                 return true;
-            default:
+            }
+            default: {
                 return super.onOptionsItemSelected(item);
+            }
         }
     }
 

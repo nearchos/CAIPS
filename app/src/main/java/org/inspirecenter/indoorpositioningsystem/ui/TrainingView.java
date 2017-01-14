@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.*;
 import android.os.AsyncTask;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -13,8 +14,12 @@ import org.inspirecenter.indoorpositioningsystem.data.CustomContextElement;
 import org.inspirecenter.indoorpositioningsystem.data.Floor;
 import org.inspirecenter.indoorpositioningsystem.data.Image;
 import org.inspirecenter.indoorpositioningsystem.data.Location;
+import org.inspirecenter.indoorpositioningsystem.data.Training;
 import org.inspirecenter.indoorpositioningsystem.db.DatabaseHelper;
 import org.inspirecenter.indoorpositioningsystem.db.DatabaseOpenHelper;
+
+import java.util.Arrays;
+import java.util.Vector;
 
 
 /**
@@ -53,6 +58,8 @@ public class TrainingView extends View
 
     private CustomContextElement [] customContextElements = new CustomContextElement[0];
 
+    private Vector<Training> trainings = new Vector<>();
+
     void init(final Location location, final Floor floor)
     {
         this.location = location;
@@ -63,7 +70,19 @@ public class TrainingView extends View
         final SQLiteDatabase sqLiteDatabase = databaseOpenHelper.getWritableDatabase();
         customContextElements = DatabaseHelper.getCustomContextElements(sqLiteDatabase, location.getUuid(), true);
         sqLiteDatabase.close();
+        trainings.clear();
+    }
 
+    void init(final Location location, final Floor floor, final Training training) {
+        init(location, floor);
+        this.trainings.add(training);
+    }
+
+    void init(final Location location, final Floor floor, final Training [] trainings) {
+        init(location, floor);
+        for(final Training training : trainings) {
+            this.trainings.add(training);
+        }
     }
 
     double [] getSelectedCoordinates()
@@ -74,10 +93,32 @@ public class TrainingView extends View
         double px = 1d - (selectedOffsetX + bitmapWidth - canvasWidth/2) / bitmapWidth;
         double py = 1d - (selectedOffsetY + bitmapHeight - canvasHeight/2) / bitmapHeight;
 
-        double lat = floor.getTopLeftLat() + (floor.getBottomRightLat() - floor.getTopLeftLat()) * px;
-        double lng = floor.getTopLeftLng() + (floor.getBottomRightLng() - floor.getTopLeftLng()) * py;
+        double lng = floor.getTopLeftLng() + (floor.getBottomRightLng() - floor.getTopLeftLng()) * px;
+        double lat = floor.getTopLeftLat() + (floor.getBottomRightLat() - floor.getTopLeftLat()) * py;
 
         return new double[] {lat, lng};
+    }
+
+    double [] translateCoordinatesToCanvasPosition(final double lat, final double lng) {
+        double lngRange = floor.getBottomRightLng() - floor.getTopLeftLng();
+        double latRange = floor.getTopLeftLat() - floor.getBottomRightLat();
+        double lngOffset = lng - floor.getTopLeftLng();
+        double latOffset = lat - floor.getBottomRightLat();
+        double bitmapRatioX = lngOffset / lngRange;
+        double bitmapRatioY = latOffset / latRange;
+
+        double [] canvasPosition = new double[2];
+        canvasPosition[0] = selectedOffsetX + bitmapRatioX * bitmapWidth;
+        canvasPosition[1] = selectedOffsetY + (1f - bitmapRatioY) * bitmapHeight;
+
+Log.d(TAG, "canvasPosition box - lat..." + floor.getBottomRightLat() + "~~" + lat + "~~" + floor.getTopLeftLat() + " || lng..." + floor.getTopLeftLng() + "~~" + lng + "~~" + floor.getBottomRightLng());//todo delete
+Log.d(TAG, "canvasPosition 0. bitmapWidth: " + bitmapWidth + ", bitmapHeight: " + bitmapHeight + ", canvasWidth: " + canvasWidth + ", canvasHeight: " + canvasHeight);//todo delete
+Log.d(TAG, "canvasPosition 1. selectedOffsetX / selectedOffsetY: " + selectedOffsetX + " / " + selectedOffsetY);//todo delete
+Log.d(TAG, "canvasPosition 2. lngRange / latRange (X / Y): " + lngRange + " / " + latRange);//todo delete
+Log.d(TAG, "canvasPosition 3. lngOffset / latOffset (X / Y): " + lngOffset + " / " + latOffset);//todo delete
+Log.d(TAG, "canvasPosition 4. bitmapRatioX / bitmapRatioY: " + String.format("%.8f", bitmapRatioX) + " / " + String.format("%.8f", 1f - bitmapRatioY));//todo delete
+Log.d(TAG, "canvasPosition: " + Arrays.toString(canvasPosition));//todo delete
+        return canvasPosition;
     }
 
     private float startX = 0f;
@@ -167,6 +208,15 @@ public class TrainingView extends View
             final String line = customContextElements[i].getName() + ": " + customContextElements[i].getValue();
             canvas.drawText(line, canvasWidth - 32 - textPaint.measureText(line), canvasHeight - 22 - (i * 32), textPaint);
         }
+
+        // todo draw trainings
+        for(final Training training : trainings) {
+            if(floor.getUuid().equals(training.getFloorUuid())) {
+                double [] canvasPosition = translateCoordinatesToCanvasPosition(training.getLat(), training.getLng());
+                canvas.drawCircle((float) canvasPosition[0], (float) canvasPosition[1], 16, linePaint);
+            }
+        }
+
     }
 
     private class LoadImageAsyncTask extends AsyncTask
@@ -175,24 +225,11 @@ public class TrainingView extends View
         protected Object doInBackground(Object[] params)
         {
             final Context context = (Context) params[0];
-//            try
-//            {
-//                final URL url = new URL(floor.getImageUrl());
-//                final HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-//                httpURLConnection.setDoInput(true);
-//                httpURLConnection.connect();
-//                final InputStream inputStream = httpURLConnection.getInputStream();
-//                mapBitmap = BitmapFactory.decodeStream(inputStream);
-                final DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(context);
-                final Image image = DatabaseHelper.getImage(databaseOpenHelper.getReadableDatabase(), floor.getImageUrl());
-                mapBitmap = image.getImage();
-                bitmapWidth = mapBitmap.getWidth();
-                bitmapHeight = mapBitmap.getHeight();
-//            }
-//            catch (IOException ioe)
-//            {
-//                Log.e(TAG, ioe.getMessage());
-//            }
+            final DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(context);
+            final Image image = DatabaseHelper.getImage(databaseOpenHelper.getReadableDatabase(), floor.getImageUrl());
+            mapBitmap = image.getImage();
+            bitmapWidth = mapBitmap.getWidth();
+            bitmapHeight = mapBitmap.getHeight();
 
             return null;
         }

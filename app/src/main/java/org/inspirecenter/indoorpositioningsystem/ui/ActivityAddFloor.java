@@ -59,8 +59,8 @@ public class ActivityAddFloor extends AppCompatActivity {
 
         uuidEditText.setText(uuid);
         seqEditText.setText(String.format(Locale.US, "%d", 1));
-        topLeftEditText.setText(String.format(Locale.US, "%.4f,%.4f", 0d, 0d));
-        bottomRightEditText.setText(String.format(Locale.US, "%.4f,%.4f", 0d, 0d));
+        topLeftEditText.setText(String.format(Locale.US, "%.6f, %.6f", 0d, 0d));
+        bottomRightEditText.setText(String.format(Locale.US, "%.6f, %.6f", 0d, 0d));
 
         final String imageUuid = imageUuidEditText.getText().toString();
         if(!imageUuid.isEmpty()) {
@@ -143,11 +143,11 @@ public class ActivityAddFloor extends AppCompatActivity {
             if(requestCode == REQUEST_CODE_EDIT_TOP_LEFT) {
                 double lat = data.getDoubleExtra(ActivitySelectCoordinates.SELECTED_LAT, 0d);
                 double lng = data.getDoubleExtra(ActivitySelectCoordinates.SELECTED_LNG, 0d);
-                topLeftEditText.setText(String.format(Locale.US, "%.4f,%.4f", lat, lng));
+                topLeftEditText.setText(String.format(Locale.US, "%.6f, %.6f", lat, lng));
             } else if(requestCode == REQUEST_CODE_EDIT_BOTTOM_RIGHT) {
                 double lat = data.getDoubleExtra(ActivitySelectCoordinates.SELECTED_LAT, 0d);
                 double lng = data.getDoubleExtra(ActivitySelectCoordinates.SELECTED_LNG, 0d);
-                bottomRightEditText.setText(String.format(Locale.US, "%.4f,%.4f", lat, lng));
+                bottomRightEditText.setText(String.format(Locale.US, "%.6f, %.6f", lat, lng));
             } else if(requestCode == REQUEST_CODE_SELECT_IMAGE) {
                 final String imageUuid = data.getStringExtra(ActivitySelectImage.INTENT_EXTRA_SELECTED_IMAGE_UUID_KEY);
                 imageUuidEditText.setText(imageUuid);

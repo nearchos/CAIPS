@@ -8,7 +8,7 @@ android {
         minSdkVersion 18
         targetSdkVersion 23
         versionCode 2
-        versionName "2.1"
+        versionName "2.3"
         multiDexEnabled true // Enabling multidex support.
     }
     buildTypes {

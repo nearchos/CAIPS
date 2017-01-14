@@ -75,8 +75,8 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
                     "timestamp INTEGER, " +
                     "radiomap TEXT NOT NULL, " +
                     "context TEXT NOT NULL, " +
-                    "lat FLOAT, " +
-                    "lng FLOAT" +
+                    "lat REAL, " +
+                    "lng REAL" +
                     ")";
 
     private static final String SQL_CREATE_CUSTOM_CONTEXT =

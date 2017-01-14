@@ -1,9 +1,13 @@
 package org.inspirecenter.indoorpositioningsystem.ui;
 
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -12,7 +16,10 @@ import android.widget.Toast;
 
 import org.inspirecenter.indoorpositioningsystem.R;
 import org.inspirecenter.indoorpositioningsystem.data.FingerprintElement;
+import org.inspirecenter.indoorpositioningsystem.data.Location;
 import org.inspirecenter.indoorpositioningsystem.data.Training;
+import org.inspirecenter.indoorpositioningsystem.db.DatabaseHelper;
+import org.inspirecenter.indoorpositioningsystem.db.DatabaseOpenHelper;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -23,8 +30,9 @@ public class ActivityTraining extends AppCompatActivity {
 
     public static final String TAG = "ips";
 
-    public static final String PAYLOAD_TRAININGS_KEY = "payload-trainings-key";
+    public static final String PAYLOAD_LOCATION_UUID_KEY = "payload-location-uuid-key";
     public static final String PAYLOAD_TRAINING_INDEX_KEY = "payload-training-index-key";
+    public static final String PAYLOAD_TRAININGS_KEY = "payload-trainings-key";
 
     private TextView uuidTextView;
     private TextView coordinatesTextView;
@@ -54,6 +62,31 @@ public class ActivityTraining extends AppCompatActivity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_training, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
+            case R.id.menu_training_view_map:
+                final Training [] selectedTraining = new Training[] { trainings[selectedTrainingIndex] };
+                final Intent intent = new Intent(this, ActivityTrainingsOnMap.class);
+                intent.putExtra(PAYLOAD_TRAININGS_KEY, selectedTraining);
+                startActivity(intent);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         handleIntent(intent);
@@ -63,7 +96,10 @@ public class ActivityTraining extends AppCompatActivity {
         assert intent != null;
 
         selectedTrainingIndex = intent.getIntExtra(PAYLOAD_TRAINING_INDEX_KEY, 0);
-        trainings = (Training[]) intent.getSerializableExtra(PAYLOAD_TRAININGS_KEY);
+        final String locationUuid = intent.getStringExtra(PAYLOAD_LOCATION_UUID_KEY);
+        final DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(this);
+        trainings = DatabaseHelper.getTrainings(databaseOpenHelper.getReadableDatabase(), locationUuid);
+        databaseOpenHelper.close();
         showSelectedTraining();
     }
 

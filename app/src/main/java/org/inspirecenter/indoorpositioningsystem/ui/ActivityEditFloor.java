@@ -80,8 +80,8 @@ public class ActivityEditFloor extends AppCompatActivity {
         nameEditText.setText(floor.getName());
         seqEditText.setText(String.format(Locale.US, "%d", floor.getSeq()));
         imageUuidEditText.setText(floor.getImageUrl());
-        topLeftEditText.setText(String.format(Locale.US, "%.4f,%.4f", floor.getTopLeftLat(), floor.getTopLeftLng()));
-        bottomRightEditText.setText(String.format(Locale.US, "%.4f,%.4f", floor.getBottomRightLat(), floor.getBottomRightLng()));
+        topLeftEditText.setText(String.format(Locale.US, "%.6f, %.6f", floor.getTopLeftLat(), floor.getTopLeftLng()));
+        bottomRightEditText.setText(String.format(Locale.US, "%.6f, %.6f", floor.getBottomRightLat(), floor.getBottomRightLng()));
         final String imageUuid = floor.getImageUrl();
         if(imageUuid != null && !imageUuid.isEmpty()) {
             final Image image = DatabaseHelper.getImage(databaseOpenHelper.getReadableDatabase(), imageUuid);
@@ -148,11 +148,11 @@ public class ActivityEditFloor extends AppCompatActivity {
             if(requestCode == REQUEST_CODE_EDIT_TOP_LEFT) {
                 double lat = data.getDoubleExtra(ActivitySelectCoordinates.SELECTED_LAT, 0d);
                 double lng = data.getDoubleExtra(ActivitySelectCoordinates.SELECTED_LNG, 0d);
-                topLeftEditText.setText(String.format(Locale.US, "%.4f,%.4f", lat, lng));
+                topLeftEditText.setText(String.format(Locale.US, "%.6f, %.6f", lat, lng));
             } else if(requestCode == REQUEST_CODE_EDIT_BOTTOM_RIGHT) {
                 double lat = data.getDoubleExtra(ActivitySelectCoordinates.SELECTED_LAT, 0d);
                 double lng = data.getDoubleExtra(ActivitySelectCoordinates.SELECTED_LNG, 0d);
-                bottomRightEditText.setText(String.format(Locale.US, "%.4f,%.4f", lat, lng));
+                bottomRightEditText.setText(String.format(Locale.US, "%.6f, %.6f", lat, lng));
             } else if(requestCode == REQUEST_CODE_SELECT_IMAGE) {
                 final String imageUuid = data.getStringExtra(ActivitySelectImage.INTENT_EXTRA_SELECTED_IMAGE_UUID_KEY);
                 imageUuidEditText.setText(imageUuid);
