@@ -9,6 +9,7 @@ import android.content.Context;
 
 public enum ContextType {
 
+    INSTALLATION_UUID("device-installation-uuid"),
     DEVICE_MANUFACTURER("device-manufacturer"),
     DEVICE_MODEL("device-model"),
     BATTERY_LEVEL("battery-level"),

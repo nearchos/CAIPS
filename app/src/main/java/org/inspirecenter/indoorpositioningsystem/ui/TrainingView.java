@@ -3,10 +3,11 @@ package org.inspirecenter.indoorpositioningsystem.ui;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.*;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 
 import org.inspirecenter.indoorpositioningsystem.R;
@@ -18,9 +19,7 @@ import org.inspirecenter.indoorpositioningsystem.data.Training;
 import org.inspirecenter.indoorpositioningsystem.db.DatabaseHelper;
 import org.inspirecenter.indoorpositioningsystem.db.DatabaseOpenHelper;
 
-import java.util.Arrays;
 import java.util.Vector;
-
 
 /**
  * @author Nearchos Paspallis
@@ -29,6 +28,9 @@ import java.util.Vector;
 public class TrainingView extends View
 {
     public static final String TAG = "ips";
+
+    private ScaleGestureDetector scaleDetector;
+    private float scaleFactor = 1.f;
 
     private final Paint linePaint = new Paint();
     private final Paint textPaint = new Paint();
@@ -44,6 +46,8 @@ public class TrainingView extends View
     public TrainingView(final Context context, final AttributeSet attrs, final int defStyleAttr)
     {
         super(context, attrs, defStyleAttr);
+
+        scaleDetector = new ScaleGestureDetector(context, new ScaleListener());
 
         textPaint.setColor(context.getResources().getColor(R.color.colorAccent));
         textPaint.setTextSize(20f);
@@ -111,13 +115,6 @@ public class TrainingView extends View
         canvasPosition[0] = selectedOffsetX + bitmapRatioX * bitmapWidth;
         canvasPosition[1] = selectedOffsetY + (1f - bitmapRatioY) * bitmapHeight;
 
-Log.d(TAG, "canvasPosition box - lat..." + floor.getBottomRightLat() + "~~" + lat + "~~" + floor.getTopLeftLat() + " || lng..." + floor.getTopLeftLng() + "~~" + lng + "~~" + floor.getBottomRightLng());//todo delete
-Log.d(TAG, "canvasPosition 0. bitmapWidth: " + bitmapWidth + ", bitmapHeight: " + bitmapHeight + ", canvasWidth: " + canvasWidth + ", canvasHeight: " + canvasHeight);//todo delete
-Log.d(TAG, "canvasPosition 1. selectedOffsetX / selectedOffsetY: " + selectedOffsetX + " / " + selectedOffsetY);//todo delete
-Log.d(TAG, "canvasPosition 2. lngRange / latRange (X / Y): " + lngRange + " / " + latRange);//todo delete
-Log.d(TAG, "canvasPosition 3. lngOffset / latOffset (X / Y): " + lngOffset + " / " + latOffset);//todo delete
-Log.d(TAG, "canvasPosition 4. bitmapRatioX / bitmapRatioY: " + String.format("%.8f", bitmapRatioX) + " / " + String.format("%.8f", 1f - bitmapRatioY));//todo delete
-Log.d(TAG, "canvasPosition: " + Arrays.toString(canvasPosition));//todo delete
         return canvasPosition;
     }
 
@@ -131,6 +128,8 @@ Log.d(TAG, "canvasPosition: " + Arrays.toString(canvasPosition));//todo delete
     @Override
     public boolean onTouchEvent(final MotionEvent motionEvent)
     {
+        scaleDetector.onTouchEvent(motionEvent);
+
         final int action = motionEvent.getActionMasked();
         switch(action) {
             case (MotionEvent.ACTION_DOWN) :
@@ -168,6 +167,8 @@ Log.d(TAG, "canvasPosition: " + Arrays.toString(canvasPosition));//todo delete
     @Override
     public void onDraw(Canvas canvas)
     {
+        canvas.scale(scaleFactor, scaleFactor);
+
         // draw the bitmap at offset
         canvasWidth = canvas.getWidth();
         canvasHeight = canvas.getHeight();
@@ -216,7 +217,6 @@ Log.d(TAG, "canvasPosition: " + Arrays.toString(canvasPosition));//todo delete
                 canvas.drawCircle((float) canvasPosition[0], (float) canvasPosition[1], 16, linePaint);
             }
         }
-
     }
 
     private class LoadImageAsyncTask extends AsyncTask
@@ -238,6 +238,16 @@ Log.d(TAG, "canvasPosition: " + Arrays.toString(canvasPosition));//todo delete
         protected void onPostExecute(Object o)
         {
             invalidate(); // update UI
+        }
+    }
+
+    private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+        @Override
+        public boolean onScale(ScaleGestureDetector detector) {
+            scaleFactor *= detector.getScaleFactor();
+            scaleFactor = Math.max(0.1f, Math.min(scaleFactor, 10.0f));
+            invalidate();
+            return true;
         }
     }
 }

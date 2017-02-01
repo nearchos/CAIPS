@@ -33,6 +33,7 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
 
+import org.inspirecenter.indoorpositioningsystem.Installation;
 import org.inspirecenter.indoorpositioningsystem.R;
 
 import java.util.Locale;
@@ -117,6 +118,7 @@ public class ActivityContextSettings extends AppCompatActivity implements Google
     {
         public static final IntentFilter batteryIntentFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
 
+        CheckBoxPreference deviceInstallationUUIDCheckBoxPreference;
         CheckBoxPreference deviceBrandCheckBoxPreference;
         CheckBoxPreference batteryLevelCheckBoxPreference;
         CheckBoxPreference chargingStateCheckBoxPreference;
@@ -165,6 +167,12 @@ public class ActivityContextSettings extends AppCompatActivity implements Google
         @Override
         public void onResume() {
             super.onResume();
+
+            {
+                deviceInstallationUUIDCheckBoxPreference = (CheckBoxPreference) findPreference(ContextType.INSTALLATION_UUID.getName());
+                deviceInstallationUUIDCheckBoxPreference.setChecked(sharedPreferences.getBoolean(ContextType.INSTALLATION_UUID.getName(), true));
+                deviceInstallationUUIDCheckBoxPreference.setSummary("Installation UUID: " + Installation.id(getActivity()));
+            }
 
             {
                 deviceBrandCheckBoxPreference = (CheckBoxPreference) findPreference(ContextType.DEVICE_MANUFACTURER.getName());

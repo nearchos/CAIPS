@@ -6,6 +6,11 @@
         android:title="Hardware sensors"/>
 
     <CheckBoxPreference
+        android:key="device-installation-uuid"
+        android:title="Unique installation UUID"
+        android:summary="A unique identifier of this installation"/>
+
+    <CheckBoxPreference
         android:key="device-manufacturer"
         android:title="Device brand"
         android:summary="Details about the device manufacturer"/>

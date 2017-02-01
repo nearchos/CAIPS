@@ -38,6 +38,7 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
 
+import org.inspirecenter.indoorpositioningsystem.Installation;
 import org.inspirecenter.indoorpositioningsystem.R;
 import org.inspirecenter.indoorpositioningsystem.data.CustomContextElement;
 import org.inspirecenter.indoorpositioningsystem.data.Floor;
@@ -387,6 +388,7 @@ public class ActivitySubmitTraining extends AppCompatActivity
             super();
 
             // add constant context (make, model, etc.)
+            latestValues.put(ContextType.INSTALLATION_UUID.getName(), "[ \"" + Installation.id(ActivitySubmitTraining.this) + "\" ]");
             latestValues.put(ContextType.DEVICE_MANUFACTURER.getName(), "[ \"" + Build.MANUFACTURER + "\" ]");
             latestValues.put(ContextType.DEVICE_MODEL.getName(), "[ \"" + Build.MODEL + "\" ]");
 
