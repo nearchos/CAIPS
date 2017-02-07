@@ -3,7 +3,6 @@ package org.inspirecenter.indoorpositioningsystem.ui;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.*;
-import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
@@ -82,7 +81,7 @@ public class TrainingView extends View
         this.trainings.add(training);
     }
 
-    void init(final Location location, final Floor floor, final Training [] trainings) {
+    void init(final Location location, final Floor floor, final Vector<Training> trainings) {
         init(location, floor);
         for(final Training training : trainings) {
             this.trainings.add(training);

@@ -309,7 +309,7 @@ Log.d(TAG, "Storing image: " + image.getUuid() + ", " + image.getLabel() + ", da
         return numOfRows;
     }
 
-    public static Training [] getTrainings(final SQLiteDatabase sqLiteDatabase, final String locationUuid) {
+    public static Training [] getTrainingsByLocationUuid(final SQLiteDatabase sqLiteDatabase, final String locationUuid) {
         final Cursor cursor = sqLiteDatabase.rawQuery("SELECT * FROM trainings WHERE locationUuid=?", new String [] {locationUuid});
         int numOfRows = cursor.getCount();
         int columnUUIDIndex = cursor.getColumnIndex("uuid");
@@ -339,6 +339,48 @@ Log.d(TAG, "Storing image: " + image.getUuid() + ", " + image.getLabel() + ", da
         sqLiteDatabase.close();
 
         return trainings;
+    }
+
+    /**
+     * Returns the {@link Training} with the specified UUID or null if not found.
+     * @param sqLiteDatabase
+     * @param trainingUuid
+     * @return the {@link Training} with the specified UUID or null if not found.
+     */
+    public static Training getTrainingByUuid(final SQLiteDatabase sqLiteDatabase, final String trainingUuid) {
+        final Cursor cursor = sqLiteDatabase.rawQuery("SELECT * FROM trainings WHERE uuid=?", new String [] {trainingUuid});
+        int numOfRows = cursor.getCount();
+        int columnUUIDIndex = cursor.getColumnIndex("uuid");
+        int columnCreatedByIndex = cursor.getColumnIndex("createdBy");
+        int columnLocationUuidByIndex = cursor.getColumnIndex("locationUuid");
+        int columnFloorUuidByIndex = cursor.getColumnIndex("floorUuid");
+        int columnTimestampByIndex = cursor.getColumnIndex("timestamp");
+        int columnRadiomapByIndex = cursor.getColumnIndex("radiomap");
+        int columnContextByIndex = cursor.getColumnIndex("context");
+        int columnLatByIndex = cursor.getColumnIndex("lat");
+        int columnLngByIndex = cursor.getColumnIndex("lng");
+
+        final Training training;
+
+        cursor.moveToFirst();
+        if(numOfRows == 1) {
+            final String uuid = cursor.getString(columnUUIDIndex);
+            final String createdBy = cursor.getString(columnCreatedByIndex);
+            final String locationUuid = cursor.getString(columnLocationUuidByIndex);
+            final String floorUUid = cursor.getString(columnFloorUuidByIndex);
+            final long timestamp = cursor.getLong(columnTimestampByIndex);
+            final String radiomap = cursor.getString(columnRadiomapByIndex);
+            final String context = cursor.getString(columnContextByIndex);
+            final double lat = cursor.getDouble(columnLatByIndex);
+            final double lng = cursor.getDouble(columnLngByIndex);
+            training = new Training(uuid, createdBy, locationUuid, floorUUid, timestamp, radiomap, context, lat, lng);
+        } else {
+            training = null; // training not found
+        }
+        cursor.close();
+        sqLiteDatabase.close();
+
+        return training;
     }
 
     public static long addCustomContext(final SQLiteDatabase sqLiteDatabase, final String uuid, final String locationUuid, final String name, final String value, final boolean checked) {

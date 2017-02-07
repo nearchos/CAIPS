@@ -17,6 +17,9 @@ import org.inspirecenter.indoorpositioningsystem.data.Training;
 import org.inspirecenter.indoorpositioningsystem.db.DatabaseHelper;
 import org.inspirecenter.indoorpositioningsystem.db.DatabaseOpenHelper;
 
+import java.util.Collections;
+import java.util.Vector;
+
 public class ActivityTrainingsOnMap extends AppCompatActivity {
 
     private Spinner floorSpinner;
@@ -42,10 +45,22 @@ public class ActivityTrainingsOnMap extends AppCompatActivity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
 
-        final Training [] trainings = (Training []) intent.getSerializableExtra(ActivityTraining.PAYLOAD_TRAININGS_KEY);
-        final String locationUuid = trainings[0].getLocationUuid();
-
         final DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(this);
+        final Vector<Training> trainings = new Vector<>();
+        String locationUuid = null;
+        if(intent.hasExtra(ActivityTraining.PAYLOAD_TRAINING_UUID_KEY)) { // single training
+            final String trainingUuid = intent.getStringExtra(ActivityTraining.PAYLOAD_TRAINING_UUID_KEY);
+            final Training training = DatabaseHelper.getTrainingByUuid(databaseOpenHelper.getReadableDatabase(), trainingUuid);
+            locationUuid = training.getLocationUuid();
+            trainings.add(training);
+        } else if(intent.hasExtra(ActivityTraining.PAYLOAD_LOCATION_UUID_KEY)) { // all trainings
+            locationUuid = intent.getStringExtra(ActivityTraining.PAYLOAD_LOCATION_UUID_KEY);
+            Collections.addAll(trainings, DatabaseHelper.getTrainingsByLocationUuid(databaseOpenHelper.getReadableDatabase(), locationUuid));
+        } else { // unknown configuration
+            Toast.makeText(this, "Unknown or missing information: " + intent.getExtras(), Toast.LENGTH_SHORT).show();
+            finish();
+        }
+        databaseOpenHelper.close();
 
         final Location location = DatabaseHelper.getLocation(databaseOpenHelper.getReadableDatabase(), locationUuid);
 
@@ -72,6 +87,4 @@ public class ActivityTrainingsOnMap extends AppCompatActivity {
             });
         }
     }
-
-
 }

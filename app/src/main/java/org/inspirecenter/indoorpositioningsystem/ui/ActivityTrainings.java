@@ -34,8 +34,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-import static org.inspirecenter.indoorpositioningsystem.ui.ActivityTraining.PAYLOAD_TRAININGS_KEY;
-
 public class ActivityTrainings extends AppCompatActivity {
 
     public static final String TAG = "ips";
@@ -68,7 +66,7 @@ public class ActivityTrainings extends AppCompatActivity {
 
     private void updateListView() {
         final DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(this);
-        final Training [] trainings = DatabaseHelper.getTrainings(databaseOpenHelper.getReadableDatabase(), locationUuid);
+        final Training [] trainings = DatabaseHelper.getTrainingsByLocationUuid(databaseOpenHelper.getReadableDatabase(), locationUuid);
         databaseOpenHelper.close();
         Log.d(TAG, "trainings: " + trainings.length);
         listView.setAdapter(new TrainingsAdapter(this, trainings));
@@ -148,11 +146,8 @@ public class ActivityTrainings extends AppCompatActivity {
                 return true;
             }
             case R.id.menu_trainings_on_map: {
-                final DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(this);
-                final Training [] trainings = DatabaseHelper.getTrainings(databaseOpenHelper.getReadableDatabase(), locationUuid);
-                databaseOpenHelper.close();
                 final Intent intent = new Intent(this, ActivityTrainingsOnMap.class);
-                intent.putExtra(PAYLOAD_TRAININGS_KEY, trainings);
+                intent.putExtra(ActivityTraining.PAYLOAD_LOCATION_UUID_KEY, locationUuid);
                 startActivity(intent);
                 return true;
             }
@@ -236,7 +231,7 @@ public class ActivityTrainings extends AppCompatActivity {
 
     private void saveToFile() {
         final DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(this);
-        final Training[] trainings = DatabaseHelper.getTrainings(databaseOpenHelper.getReadableDatabase(), locationUuid);
+        final Training[] trainings = DatabaseHelper.getTrainingsByLocationUuid(databaseOpenHelper.getReadableDatabase(), locationUuid);
 
         final StringBuilder json = new StringBuilder("[\n");
         int num = 0;

@@ -51,7 +51,7 @@ public class FloorsAdapter extends ArrayAdapter<Floor>
         this.layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         if(floors.length > 0) {
             final DatabaseOpenHelper databaseOpenHelper = new DatabaseOpenHelper(context);
-            final Training [] trainings = DatabaseHelper.getTrainings(databaseOpenHelper.getReadableDatabase(), floors[0].getLocationUUID());
+            final Training [] trainings = DatabaseHelper.getTrainingsByLocationUuid(databaseOpenHelper.getReadableDatabase(), floors[0].getLocationUUID());
             for(final Floor floor : floors) {
                 floorUuidToTrainingsMap.put(floor.getUuid(), 0);
             }
