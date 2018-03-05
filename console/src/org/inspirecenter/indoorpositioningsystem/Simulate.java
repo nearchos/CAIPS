@@ -25,7 +25,7 @@ public class Simulate
      * - ground floor - first floor 4.50m
      */
     public static final double TEST_SAMPLE_RATIO    = 0.1d; // 10% of the samples will be used for testing
-    public static final String INPUT_FILE_NAME      = "data.txt";
+    public static final String INPUT_FILE_NAME      = "../data.json";
     public static final int LOOPS = 100; // how many times to repeat the experiment
     public static final LocationEstimationAlgorithm[] algorithms = {
             new BruteForceLocationEstimationAlgorithm(),
