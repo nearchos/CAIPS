@@ -6,14 +6,13 @@ import java.util.List;
  * Created by Nearchos Paspallis on 08/07/2014.
  *
  */
-public class Data {
+public class Dataset {
 
     private String status;
     private String locationUUID;
-    private List<Training> trainings;
+    private List<MeasurementEntry> measurements;
 
-    public String getStatus()
-    {
+    public String getStatus() {
         return status;
     }
 
@@ -22,13 +21,13 @@ public class Data {
         return locationUUID;
     }
 
-    public List<Training> getTrainings()
+    public List<MeasurementEntry> getMeasurements()
     {
-        return trainings;
+        return measurements;
     }
 
     @Override
     public String toString() {
-        return String.format("status:%s, locationUUID:%s, numOfTrainings:%d", status, locationUUID, trainings.size());
+        return String.format("status:%s, locationUUID:%s, numOfTrainings:%d", status, locationUUID, measurements.size());
     }
 }

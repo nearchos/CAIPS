@@ -1,9 +1,9 @@
 package org.inspirecenter.indoorpositioningsystem;
 
 import com.google.gson.Gson;
-import org.inspirecenter.indoorpositioningsystem.model.Data;
-import org.inspirecenter.indoorpositioningsystem.model.Measurement;
-import org.inspirecenter.indoorpositioningsystem.model.Training;
+import org.inspirecenter.indoorpositioningsystem.model.Dataset;
+import org.inspirecenter.indoorpositioningsystem.model.MeasurementEntry;
+import org.inspirecenter.indoorpositioningsystem.model.RadioScanEntry;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,47 +30,47 @@ public class Anonymize {
             System.exit(-1);
         }
 
-        // read data from file
-        final Data data = new Gson().fromJson(new String(Files.readAllBytes(inputFile.toPath())), Data.class);
-        final List<Training> trainings = data.getTrainings();
+        // read dataset from file
+        final Dataset dataset = new Gson().fromJson(new String(Files.readAllBytes(inputFile.toPath())), Dataset.class);
+        final List<MeasurementEntry> measurementEntries = dataset.getMeasurements();
 
         final Map<String,Character> floorUuidToCode = new HashMap<>();
         char floorCode = 'a';
         final Map<String,Integer> macAddressToCode = new HashMap<>();
         int macAddressCode = 0;
 
-        System.out.println("{\n  \"trainings\": [");
+        System.out.println("{\n  \"measurementEntries\": [");
 
         int counter = 0;
-        for(final Training training : trainings) {
-            if(!floorUuidToCode.containsKey(training.getFloorUUID())) floorUuidToCode.put(training.getFloorUUID(), floorCode);
-            final List<Measurement> measurements = training.getMeasurements();
+        for(final MeasurementEntry measurementEntry : measurementEntries) {
+            if(!floorUuidToCode.containsKey(measurementEntry.getFloorUUID())) floorUuidToCode.put(measurementEntry.getFloorUUID(), floorCode);
+            final List<RadioScanEntry> radioScanEntries = measurementEntry.getRadioScans();
             int measurementsCount = 0;
 
             System.out.println("    {");
-            System.out.println("      \"uuid\": \"" + training.getUuid() + "\",");
-            System.out.println("      \"floorUUID\": \"" + floorUuidToCode.get(training.getFloorUUID()) + "\",");
-            System.out.println("      \"createdBy\": " + training.getCreatedBy().hashCode() + ",");
-            System.out.println("      \"timestamp\": " + training.getTimestamp() + ",");
-            System.out.println("      \"lat\": " + training.getLat() + ",");
-            System.out.println("      \"lng\": " + training.getLng() + ",");
-            System.out.println("      \"context\": " + getContextAsJSON(training) + ",");
-            System.out.println("      \"measurements\": [");
-            for(final Measurement measurement : measurements) {
-                if(!macAddressToCode.containsKey(measurement.getMacAddress())) macAddressToCode.put(measurement.getMacAddress(), macAddressCode++);
-                System.out.println("        {\"macAddress\": \"" + macAddressToCode.get(measurement.getMacAddress()) + "\", \"ssid\": " + measurement.getLevelAsDecibel() + " }" + (measurementsCount++ < measurements.size() - 1 ? "," : ""));
+            System.out.println("      \"uuid\": \"" + measurementEntry.getUuid() + "\",");
+            System.out.println("      \"floorUUID\": \"" + floorUuidToCode.get(measurementEntry.getFloorUUID()) + "\",");
+            System.out.println("      \"createdBy\": " + measurementEntry.getCreatedBy().hashCode() + ",");
+            System.out.println("      \"timestamp\": " + measurementEntry.getTimestamp() + ",");
+            System.out.println("      \"lat\": " + measurementEntry.getLat() + ",");
+            System.out.println("      \"lng\": " + measurementEntry.getLng() + ",");
+            System.out.println("      \"context\": " + getContextAsJSON(measurementEntry) + ",");
+            System.out.println("      \"radioScanEntries\": [");
+            for(final RadioScanEntry radioScanEntry : radioScanEntries) {
+                if(!macAddressToCode.containsKey(radioScanEntry.getMacAddress())) macAddressToCode.put(radioScanEntry.getMacAddress(), macAddressCode++);
+                System.out.println("        {\"macAddress\": \"" + macAddressToCode.get(radioScanEntry.getMacAddress()) + "\", \"ssid\": " + radioScanEntry.getLevelAsDecibel() + " }" + (measurementsCount++ < radioScanEntries.size() - 1 ? "," : ""));
             }
             System.out.println("      ]");
-            System.out.println("    }" + (counter++ < trainings.size() - 1 ? "," : ""));
+            System.out.println("    }" + (counter++ < measurementEntries.size() - 1 ? "," : ""));
         }
 
         System.out.println("  ]\n}");
     }
 
-    private static String getContextAsJSON(final Training training) {
+    private static String getContextAsJSON(final MeasurementEntry measurementEntry) {
         String context = "{";
 
-        final Map<String,Object> contextMap = training.getContext();
+        final Map<String,Object> contextMap = measurementEntry.getContext();
 
         int count = 0;
         for(final String key : contextMap.keySet()) {

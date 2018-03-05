@@ -1,8 +1,8 @@
 package org.inspirecenter.indoorpositioningsystem.algorithms;
 
 import org.inspirecenter.indoorpositioningsystem.model.Coordinates;
-import org.inspirecenter.indoorpositioningsystem.model.Measurement;
-import org.inspirecenter.indoorpositioningsystem.model.Training;
+import org.inspirecenter.indoorpositioningsystem.model.RadioScanEntry;
+import org.inspirecenter.indoorpositioningsystem.model.MeasurementEntry;
 
 import java.util.HashMap;
 import java.util.List;
@@ -31,57 +31,57 @@ public class BruteForceSimilarBatteryLevelLocationEstimationAlgorithm implements
     }
 
     @Override
-    public Coordinates estimateLocation(final List<Training> trainings, final Training scannedTraining) {
+    public Coordinates estimateLocation(final List<MeasurementEntry> measurementEntries, final MeasurementEntry scannedMeasurementEntry) {
         // this approach computes the 'matching' for the training points that come from the SAME DEVICE TYPE only, and selects the best match
         // todo handle floor
 
-        final double batteryLevel = (Double) scannedTraining.getContext().get("batteryLevel");
-        final double batteryScale = (Double) scannedTraining.getContext().get("batteryScale");
+        final double batteryLevel = (Double) scannedMeasurementEntry.getContext().get("batteryLevel");
+        final double batteryScale = (Double) scannedMeasurementEntry.getContext().get("batteryScale");
         final double batteryPercentage = batteryLevel / batteryScale;
 
-        final List<Measurement> scannedMeasurements = scannedTraining.getMeasurements();
-        final HashMap<Training,Double> trainingsToScores = new HashMap<Training, Double>();
+        final List<RadioScanEntry> scannedRadioScanEntries = scannedMeasurementEntry.getRadioScans();
+        final HashMap<MeasurementEntry,Double> trainingsToScores = new HashMap<MeasurementEntry, Double>();
         // compute the matching score for all training points
-        for(final Training training : trainings) {
-            final double trainingBatteryLevel = (Double) training.getContext().get("batteryLevel");
-            final double trainingBatteryScale = (Double) training.getContext().get("batteryScale");
+        for(final MeasurementEntry measurementEntry : measurementEntries) {
+            final double trainingBatteryLevel = (Double) measurementEntry.getContext().get("batteryLevel");
+            final double trainingBatteryScale = (Double) measurementEntry.getContext().get("batteryScale");
             final double trainingBatteryPercentage = trainingBatteryLevel / trainingBatteryScale;
 
-            if(Math.abs(trainingBatteryPercentage - batteryPercentage) < similarityMargin) { // only consider similar battery percentage' trainings
-                trainingsToScores.put(training, getScore(training, scannedMeasurements));
+            if(Math.abs(trainingBatteryPercentage - batteryPercentage) < similarityMargin) { // only consider similar battery percentage' measurementEntries
+                trainingsToScores.put(measurementEntry, getScore(measurementEntry, scannedRadioScanEntries));
             }
         }
 
         // select the one with the best match (i.e. highest score)
         double maxScore = 0d;
-        Training bestMatchTraining = trainings.get(0);
-        for(final Training training : trainingsToScores.keySet()) {
-            final double currentScore = trainingsToScores.get(training);
+        MeasurementEntry bestMatchMeasurementEntry = measurementEntries.get(0);
+        for(final MeasurementEntry measurementEntry : trainingsToScores.keySet()) {
+            final double currentScore = trainingsToScores.get(measurementEntry);
             if(currentScore > maxScore) {
                 maxScore = currentScore;
-                bestMatchTraining = training;
+                bestMatchMeasurementEntry = measurementEntry;
             }
         }
 
-        return new Coordinates(bestMatchTraining.getLat(), bestMatchTraining.getLng());
+        return new Coordinates(bestMatchMeasurementEntry.getLat(), bestMatchMeasurementEntry.getLng());
     }
 
     @Override
-    public double getScore(Training training, List<Measurement> scannedMeasurements) {
+    public double getScore(MeasurementEntry measurementEntry, List<RadioScanEntry> scannedRadioScanEntries) {
         // initially, assume all fingerprints have not been checked
         final HashMap<String,Double> uncheckedTrainingMeasurements = new HashMap<>();
-        for(final Measurement measurement : training.getMeasurements()) {
-            uncheckedTrainingMeasurements.put(measurement.getMacAddress(), measurement.getLevelAsRatio());
+        for(final RadioScanEntry radioScanEntry : measurementEntry.getRadioScans()) {
+            uncheckedTrainingMeasurements.put(radioScanEntry.getMacAddress(), radioScanEntry.getLevelAsRatio());
         }
 
         double sum = 0d;
-        for(final Measurement scannedMeasurement : scannedMeasurements) {
+        for(final RadioScanEntry scannedRadioScanEntry : scannedRadioScanEntries) {
             // android reports level as a range from -100 (very poor) to 0 (excellent)
             // i convert it to 0 (very poor) to 1 excellent
-            final double scannedLevel = (scannedMeasurement.getLevelAsRatio() + 100d) / 100d;
+            final double scannedLevel = (scannedRadioScanEntry.getLevelAsRatio() + 100d) / 100d;
             final double trainingLevel;
-            if(uncheckedTrainingMeasurements.containsKey(scannedMeasurement.getMacAddress())) {
-                trainingLevel = (uncheckedTrainingMeasurements.remove(scannedMeasurement.getMacAddress()) + 100d) / 100d;
+            if(uncheckedTrainingMeasurements.containsKey(scannedRadioScanEntry.getMacAddress())) {
+                trainingLevel = (uncheckedTrainingMeasurements.remove(scannedRadioScanEntry.getMacAddress()) + 100d) / 100d;
             } else {
                 trainingLevel = 0d;
             }
@@ -93,8 +93,13 @@ public class BruteForceSimilarBatteryLevelLocationEstimationAlgorithm implements
             sum += Math.pow((uncheckedTrainingMeasurements.get(trainingMeasurement) + 100d)/100d, 2d);
         }
 
-        final int maxSize = Math.max(scannedMeasurements.size(), training.getMeasurements().size());
+        final int maxSize = Math.max(scannedRadioScanEntries.size(), measurementEntry.getRadioScans().size());
 
         return 1 - Math.sqrt(sum / maxSize);
+    }
+
+    @Override
+    public String toString() {
+        return getName();
     }
 }

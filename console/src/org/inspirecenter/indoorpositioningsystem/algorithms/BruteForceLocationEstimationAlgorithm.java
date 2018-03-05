@@ -1,7 +1,7 @@
 package org.inspirecenter.indoorpositioningsystem.algorithms;
 
-import org.inspirecenter.indoorpositioningsystem.model.Measurement;
-import org.inspirecenter.indoorpositioningsystem.model.Training;
+import org.inspirecenter.indoorpositioningsystem.model.MeasurementEntry;
+import org.inspirecenter.indoorpositioningsystem.model.RadioScanEntry;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,25 +19,25 @@ public class BruteForceLocationEstimationAlgorithm extends AbstractLocationEstim
     }
 
     @Override
-    public double getScore(Training training, List<Measurement> scannedMeasurements)
+    public double getScore(MeasurementEntry measurementEntry, List<RadioScanEntry> scannedRadioScanEntries)
     {
         // initially, assume all fingerprints have not been checked
         final HashMap<String,Double> uncheckedTrainingMeasurements = new HashMap<>();
-        for(final Measurement measurement : training.getMeasurements())
+        for(final RadioScanEntry radioScanEntry : measurementEntry.getRadioScans())
         {
-            uncheckedTrainingMeasurements.put(measurement.getMacAddress(), measurement.getLevelAsRatio());
+            uncheckedTrainingMeasurements.put(radioScanEntry.getMacAddress(), radioScanEntry.getLevelAsRatio());
         }
 
         double sum = 0d;
-        for(final Measurement scannedMeasurement : scannedMeasurements)
+        for(final RadioScanEntry scannedRadioScanEntry : scannedRadioScanEntries)
         {
             // android reports level as a range from -100 (very poor) to 0 (excellent)
             // i convert it to 0 (very poor) to 1 excellent
-            final double scannedLevel = (scannedMeasurement.getLevelAsRatio() + 100d) / 100d;
+            final double scannedLevel = (scannedRadioScanEntry.getLevelAsRatio() + 100d) / 100d;
             final double trainingLevel;
-            if(uncheckedTrainingMeasurements.containsKey(scannedMeasurement.getMacAddress()))
+            if(uncheckedTrainingMeasurements.containsKey(scannedRadioScanEntry.getMacAddress()))
             {
-                trainingLevel = (uncheckedTrainingMeasurements.remove(scannedMeasurement.getMacAddress()) + 100d) / 100d;
+                trainingLevel = (uncheckedTrainingMeasurements.remove(scannedRadioScanEntry.getMacAddress()) + 100d) / 100d;
             }
             else
             {
@@ -52,7 +52,7 @@ public class BruteForceLocationEstimationAlgorithm extends AbstractLocationEstim
             sum += Math.pow((uncheckedTrainingMeasurements.get(trainingMeasurement) + 100d)/100d, 2d);
         }
 
-        final int maxSize = Math.max(scannedMeasurements.size(), training.getMeasurements().size());
+        final int maxSize = Math.max(scannedRadioScanEntries.size(), measurementEntry.getRadioScans().size());
 
         return 1 - Math.sqrt(sum / maxSize);
     }

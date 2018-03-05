@@ -1,7 +1,7 @@
 package org.inspirecenter.indoorpositioningsystem.algorithms;
 
-import org.inspirecenter.indoorpositioningsystem.model.Measurement;
-import org.inspirecenter.indoorpositioningsystem.model.Training;
+import org.inspirecenter.indoorpositioningsystem.model.RadioScanEntry;
+import org.inspirecenter.indoorpositioningsystem.model.MeasurementEntry;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,21 +34,21 @@ public class BruteForceTopMatchesOnlyLocationEstimationAlgorithm extends Abstrac
     }
 
     @Override
-    public double getScore(Training training, List<Measurement> scannedMeasurements) {
+    public double getScore(MeasurementEntry measurementEntry, List<RadioScanEntry> scannedRadioScanEntries) {
         // initially, assume all fingerprints have not been checked
         final HashMap<String,Double> uncheckedTrainingMeasurements = new HashMap<>();
-        for(final Measurement measurement : training.getMeasurements()) {
-            uncheckedTrainingMeasurements.put(measurement.getMacAddress(), measurement.getLevelAsRatio());
+        for(final RadioScanEntry radioScanEntry : measurementEntry.getRadioScans()) {
+            uncheckedTrainingMeasurements.put(radioScanEntry.getMacAddress(), radioScanEntry.getLevelAsRatio());
         }
 
         final Vector<Double> differences = new Vector<Double>();
-        for(final Measurement scannedMeasurement : scannedMeasurements) {
+        for(final RadioScanEntry scannedRadioScanEntry : scannedRadioScanEntries) {
             // android reports level as a range from -100 (very poor) to 0 (excellent)
             // i convert it to 0 (very poor) to 1 excellent
-            final double scannedLevel = (scannedMeasurement.getLevelAsRatio() + 100d) / 100d;
+            final double scannedLevel = (scannedRadioScanEntry.getLevelAsRatio() + 100d) / 100d;
             final double trainingLevel;
-            if(uncheckedTrainingMeasurements.containsKey(scannedMeasurement.getMacAddress())) {
-                trainingLevel = (uncheckedTrainingMeasurements.remove(scannedMeasurement.getMacAddress()) + 100d) / 100d;
+            if(uncheckedTrainingMeasurements.containsKey(scannedRadioScanEntry.getMacAddress())) {
+                trainingLevel = (uncheckedTrainingMeasurements.remove(scannedRadioScanEntry.getMacAddress()) + 100d) / 100d;
             } else {
                 trainingLevel = 0d;
             }

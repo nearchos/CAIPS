@@ -1,8 +1,8 @@
 package org.inspirecenter.indoorpositioningsystem.algorithms;
 
 import org.inspirecenter.indoorpositioningsystem.model.Coordinates;
-import org.inspirecenter.indoorpositioningsystem.model.Measurement;
-import org.inspirecenter.indoorpositioningsystem.model.Training;
+import org.inspirecenter.indoorpositioningsystem.model.MeasurementEntry;
+import org.inspirecenter.indoorpositioningsystem.model.RadioScanEntry;
 
 import java.util.HashMap;
 import java.util.List;
@@ -13,29 +13,34 @@ import java.util.List;
  */
 public abstract class AbstractLocationEstimationAlgorithm implements LocationEstimationAlgorithm {
 
-    public Coordinates estimateLocation(final List<Training> trainings, final Training scannedTraining) {
+    public Coordinates estimateLocation(final List<MeasurementEntry> measurementEntries, final MeasurementEntry scannedMeasurementEntry) {
         // this approach simply computes the 'matching' for all training points, and selects the best match
         // todo handle floor
 
-        final List<Measurement> scannedMeasurements = scannedTraining.getMeasurements();
-        final HashMap<Training, Double> trainingsToScores = new HashMap<>();
+        final List<RadioScanEntry> scannedRadioScanEntries = scannedMeasurementEntry.getRadioScans();
+        final HashMap<MeasurementEntry, Double> trainingsToScores = new HashMap<>();
 
         // compute the matching score for all training points
-        for(final Training training : trainings) {
-            trainingsToScores.put(training, getScore(training, scannedMeasurements));
+        for(final MeasurementEntry measurementEntry : measurementEntries) {
+            trainingsToScores.put(measurementEntry, getScore(measurementEntry, scannedRadioScanEntries));
         }
 
         // select the one with the best match (i.e. highest score)
         double maxScore = 0d;
-        Training bestMatchTraining = trainings.get(0);
-        for(final Training training : trainingsToScores.keySet()) {
-            final double currentScore = trainingsToScores.get(training);
+        MeasurementEntry bestMatchMeasurementEntry = measurementEntries.get(0);
+        for(final MeasurementEntry measurementEntry : trainingsToScores.keySet()) {
+            final double currentScore = trainingsToScores.get(measurementEntry);
             if(currentScore > maxScore) {
                 maxScore = currentScore;
-                bestMatchTraining = training;
+                bestMatchMeasurementEntry = measurementEntry;
             }
         }
 
-        return new Coordinates(bestMatchTraining.getLat(), bestMatchTraining.getLng());
+        return new Coordinates(bestMatchMeasurementEntry.getLat(), bestMatchMeasurementEntry.getLng());
+    }
+
+    @Override
+    public String toString() {
+        return getName();
     }
 }

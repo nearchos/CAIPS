@@ -7,7 +7,7 @@ import java.util.Map;
  * Created by Nearchos Paspallis on 08/07/2014.
  *
  */
-public class Training {
+public class MeasurementEntry {
 
     private String uuid;
     private String createdBy;
@@ -16,7 +16,7 @@ public class Training {
     private double lat;
     private double lng;
     private Map<String,Object> context;
-    private List<Measurement> measurements;
+    private List<RadioScanEntry> radioScans;
 
     public String getUuid() {
         return uuid;
@@ -46,12 +46,12 @@ public class Training {
         return context;
     }
 
-    public List<Measurement> getMeasurements() {
-        return measurements;
+    public List<RadioScanEntry> getRadioScans() {
+        return radioScans;
     }
 
     @Override
     public String toString() {
-        return String.format("uuid: %s\nfloorUUID: %s\ncreatedBy: %s\ntimestamp: %d\ncoordinates: %f,%f\ncontext: %s\nnumOfMeasurements: %d\n\n",uuid, floorUUID, createdBy, timestamp, lat, lng, context.toString(), measurements.size());
+        return String.format("uuid: %s\nfloorUUID: %s\ncreatedBy: %s\ntimestamp: %d\ncoordinates: %f,%f\ncontext: %s\nnumOfMeasurements: %d\n\n",uuid, floorUUID, createdBy, timestamp, lat, lng, context.toString(), radioScans.size());
     }
 }

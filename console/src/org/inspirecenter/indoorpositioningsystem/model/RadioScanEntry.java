@@ -4,7 +4,7 @@ package org.inspirecenter.indoorpositioningsystem.model;
  * Created by Nearchos Paspallis on 08/07/2014.
  *
  */
-public class Measurement {
+public class RadioScanEntry {
 
     private String macAddress;
     private int ssid; // stored in decibel

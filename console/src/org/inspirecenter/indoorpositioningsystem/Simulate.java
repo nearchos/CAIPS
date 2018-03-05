@@ -3,8 +3,8 @@ package org.inspirecenter.indoorpositioningsystem;
 import com.google.gson.Gson;
 import org.inspirecenter.indoorpositioningsystem.algorithms.*;
 import org.inspirecenter.indoorpositioningsystem.model.Coordinates;
-import org.inspirecenter.indoorpositioningsystem.model.Data;
-import org.inspirecenter.indoorpositioningsystem.model.Training;
+import org.inspirecenter.indoorpositioningsystem.model.Dataset;
+import org.inspirecenter.indoorpositioningsystem.model.MeasurementEntry;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,21 +47,21 @@ public class Simulate
             System.exit(-1);
         }
 
-        // read data from file
-        final Data data = new Gson().fromJson(new String(Files.readAllBytes(inputFile.toPath())), Data.class);
-        System.out.println("Status: " + data.getStatus());
-        final List<Training> trainings = data.getTrainings();
-        System.out.println("Read " + trainings.size() + " trainings!");
+        // read dataset from file
+        final Dataset dataset = new Gson().fromJson(new String(Files.readAllBytes(inputFile.toPath())), Dataset.class);
+        System.out.println("Status: " + dataset.getStatus());
+        final List<MeasurementEntry> measurementEntries = dataset.getMeasurements();
+        System.out.println("Read " + measurementEntries.size() + " measurementEntries!");
 
         for(final LocationEstimationAlgorithm locationEstimationAlgorithm : algorithms) {
             System.out.printf("Running %-50.50s ...", locationEstimationAlgorithm.getName());
-            final SimulationResult simulationResult = simulate(trainings, locationEstimationAlgorithm, LOOPS);
+            final SimulationResult simulationResult = simulate(measurementEntries, locationEstimationAlgorithm, LOOPS);
             System.out.println(" -> " + simulationResult);
         }
 
     }
 
-    static private SimulationResult simulate(final List<Training> data, final LocationEstimationAlgorithm locationEstimationAlgorithm, final int loops)
+    static private SimulationResult simulate(final List<MeasurementEntry> data, final LocationEstimationAlgorithm locationEstimationAlgorithm, final int loops)
     {
         double averageMinDistance = 0d;
         double averageMaxDistance = 0d;
@@ -78,28 +78,28 @@ public class Simulate
         return new SimulationResult(averageMinDistance/loops, averageMaxDistance/loops, new StandardDeviationResult(averageMeanDistance/loops, averageVarianceDistance/loops));
     }
 
-    static private SimulationResult simulate(final List<Training> data, final LocationEstimationAlgorithm locationEstimationAlgorithm)
+    static private SimulationResult simulate(final List<MeasurementEntry> data, final LocationEstimationAlgorithm locationEstimationAlgorithm)
     {
         // make a copy of the input data
-        final List<Training> trainings = new ArrayList<Training>(data);
+        final List<MeasurementEntry> measurementEntries = new ArrayList<MeasurementEntry>(data);
 
         // split the data to training/testing sets
-        final Set<Training> testingSet = new HashSet<Training>();
-        int testingSetSize = (int) (trainings.size() * TEST_SAMPLE_RATIO);
+        final Set<MeasurementEntry> testingSet = new HashSet<MeasurementEntry>();
+        int testingSetSize = (int) (measurementEntries.size() * TEST_SAMPLE_RATIO);
         for(int i = 0; i < testingSetSize; i++) {
-            // select random element from trainings
-            int randomIndex = new Random().nextInt(trainings.size());
-            testingSet.add(trainings.remove(randomIndex));
+            // select random element from measurementEntries
+            int randomIndex = new Random().nextInt(measurementEntries.size());
+            testingSet.add(measurementEntries.remove(randomIndex));
         }
-//        System.out.println("org.inspirecenter.indoorpositioningsystem.model.Training size: " + trainings.size() + ", Testing size: " + testingSet.size());
+//        System.out.println("org.inspirecenter.indoorpositioningsystem.model.MeasurementEntry size: " + measurementEntries.size() + ", Testing size: " + testingSet.size());
 
         // start the simulation
         double maxDistance = Double.MIN_VALUE;
         double minDistance = Double.MAX_VALUE;
         final Vector<Double> distances = new Vector<Double>();
-        for(final Training testingTraining : testingSet) {
-            final Coordinates estimatedCoordinates = locationEstimationAlgorithm.estimateLocation(trainings, testingTraining);
-            final double distance = estimateDistance(testingTraining, estimatedCoordinates);
+        for(final MeasurementEntry testingMeasurementEntry : testingSet) {
+            final Coordinates estimatedCoordinates = locationEstimationAlgorithm.estimateLocation(measurementEntries, testingMeasurementEntry);
+            final double distance = estimateDistance(testingMeasurementEntry, estimatedCoordinates);
             if(maxDistance < distance) maxDistance = distance;
             if(minDistance > distance) minDistance = distance;
             distances.add(distance);
@@ -111,13 +111,13 @@ public class Simulate
     /**
      * Simply estimates the distance between two coordinates. Delegates the call to
      * {@link #estimateDistance(double, double, double, double)}.
-     * @param training the actual training containing the 'true' coordinates
+     * @param measurementEntry the actual measurementEntry containing the 'true' coordinates
      * @param coordinates the estimated coordinates
      * @return the distance between the 'true' and the estimated coordinates, in meters
      */
-    static private double estimateDistance(final Training training, final Coordinates coordinates) {
-        double lat1 = training.getLat();
-        double lng1 = training.getLng();
+    static private double estimateDistance(final MeasurementEntry measurementEntry, final Coordinates coordinates) {
+        double lat1 = measurementEntry.getLat();
+        double lng1 = measurementEntry.getLng();
         double lat2 = coordinates.getLat();
         double lng2 = coordinates.getLng();
 

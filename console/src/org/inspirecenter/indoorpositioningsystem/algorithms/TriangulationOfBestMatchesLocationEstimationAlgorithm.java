@@ -1,8 +1,8 @@
 package org.inspirecenter.indoorpositioningsystem.algorithms;
 
 import org.inspirecenter.indoorpositioningsystem.model.Coordinates;
-import org.inspirecenter.indoorpositioningsystem.model.Measurement;
-import org.inspirecenter.indoorpositioningsystem.model.Training;
+import org.inspirecenter.indoorpositioningsystem.model.MeasurementEntry;
+import org.inspirecenter.indoorpositioningsystem.model.RadioScanEntry;
 
 import java.util.*;
 
@@ -33,21 +33,21 @@ public class TriangulationOfBestMatchesLocationEstimationAlgorithm implements Lo
     }
 
     @Override
-    public Coordinates estimateLocation(final List<Training> trainings, final Training scannedTraining) {
+    public Coordinates estimateLocation(final List<MeasurementEntry> measurementEntries, final MeasurementEntry scannedMeasurementEntry) {
         // this approach simply computes the 'matching' for all training points, and selects the best match
         // todo handle floor
 
-        final List<Measurement> scannedMeasurements = scannedTraining.getMeasurements();
-        final HashMap<Training,Double> trainingsToScores = new HashMap<Training, Double>();
+        final List<RadioScanEntry> scannedRadioScanEntries = scannedMeasurementEntry.getRadioScans();
+        final HashMap<MeasurementEntry,Double> trainingsToScores = new HashMap<MeasurementEntry, Double>();
         // compute the matching score for all training points
-        for(final Training training : trainings) {
-            trainingsToScores.put(training, getScore(training, scannedMeasurements));
+        for(final MeasurementEntry measurementEntry : measurementEntries) {
+            trainingsToScores.put(measurementEntry, getScore(measurementEntry, scannedRadioScanEntries));
         }
 
         // sort the map, according to score values - descending
-        final SortedSet<Map.Entry<Training,Double>> sortedEntries = new TreeSet<Map.Entry<Training,Double>> (
-                new Comparator<Map.Entry<Training,Double>>() {
-                    @Override public int compare(Map.Entry<Training,Double> e1, Map.Entry<Training,Double> e2) {
+        final SortedSet<Map.Entry<MeasurementEntry,Double>> sortedEntries = new TreeSet<Map.Entry<MeasurementEntry,Double>> (
+                new Comparator<Map.Entry<MeasurementEntry,Double>>() {
+                    @Override public int compare(Map.Entry<MeasurementEntry,Double> e1, Map.Entry<MeasurementEntry,Double> e2) {
                         return e2.getValue().compareTo(e1.getValue()); // sort descending
                     }
                 }
@@ -57,7 +57,7 @@ public class TriangulationOfBestMatchesLocationEstimationAlgorithm implements Lo
         final int maxNumberOfEntries = Math.min(maxMatches, sortedEntries.size());
 
         // first iteration - compute the total score
-        Iterator<Map.Entry<Training,Double>> sortedEntriesIterator = sortedEntries.iterator();
+        Iterator<Map.Entry<MeasurementEntry,Double>> sortedEntriesIterator = sortedEntries.iterator();
         double totalScore = 0d;
         for(int i = 0; i < maxNumberOfEntries; i++) {
             totalScore += sortedEntriesIterator.next().getValue();
@@ -67,34 +67,34 @@ public class TriangulationOfBestMatchesLocationEstimationAlgorithm implements Lo
         double lat = 0d;
         double lng = 0d;
         for(int i = 0; i < maxNumberOfEntries; i++) {
-            final Map.Entry<Training,Double> entry = sortedEntriesIterator.next();
-            final Training training = entry.getKey();
+            final Map.Entry<MeasurementEntry,Double> entry = sortedEntriesIterator.next();
+            final MeasurementEntry measurementEntry = entry.getKey();
             final double score = entry.getValue();
             double weight = score / totalScore;
-            lat += training.getLat() * weight;
-            lng += training.getLng() * weight;
+            lat += measurementEntry.getLat() * weight;
+            lng += measurementEntry.getLng() * weight;
         }
 
         return new Coordinates(lat, lng);
     }
 
     @Override
-    public double getScore(Training training, List<Measurement> scannedMeasurements) {
+    public double getScore(MeasurementEntry measurementEntry, List<RadioScanEntry> scannedRadioScanEntries) {
 
         // initially, assume all fingerprints have not been checked
         final HashMap<String,Double> uncheckedTrainingMeasurements = new HashMap<>();
-        for(final Measurement measurement : training.getMeasurements()) {
-            uncheckedTrainingMeasurements.put(measurement.getMacAddress(), measurement.getLevelAsRatio());
+        for(final RadioScanEntry radioScanEntry : measurementEntry.getRadioScans()) {
+            uncheckedTrainingMeasurements.put(radioScanEntry.getMacAddress(), radioScanEntry.getLevelAsRatio());
         }
 
         double sum = 0d;
-        for(final Measurement scannedMeasurement : scannedMeasurements) {
+        for(final RadioScanEntry scannedRadioScanEntry : scannedRadioScanEntries) {
             // android reports level as a range from -100 (very poor) to 0 (excellent)
             // i convert it to 0 (very poor) to 1 excellent
-            final double scannedLevel = (scannedMeasurement.getLevelAsRatio() + 100d) / 100d;
+            final double scannedLevel = (scannedRadioScanEntry.getLevelAsRatio() + 100d) / 100d;
             final double trainingLevel;
-            if(uncheckedTrainingMeasurements.containsKey(scannedMeasurement.getMacAddress())) {
-                trainingLevel = (uncheckedTrainingMeasurements.remove(scannedMeasurement.getMacAddress()) + 100d) / 100d;
+            if(uncheckedTrainingMeasurements.containsKey(scannedRadioScanEntry.getMacAddress())) {
+                trainingLevel = (uncheckedTrainingMeasurements.remove(scannedRadioScanEntry.getMacAddress()) + 100d) / 100d;
             } else {
                 trainingLevel = 0d;
             }
@@ -106,8 +106,13 @@ public class TriangulationOfBestMatchesLocationEstimationAlgorithm implements Lo
             sum += Math.pow((uncheckedTrainingMeasurements.get(trainingMeasurement) + 100d)/100d, 2d);
         }
 
-        final int maxSize = Math.max(scannedMeasurements.size(), training.getMeasurements().size());
+        final int maxSize = Math.max(scannedRadioScanEntries.size(), measurementEntry.getRadioScans().size());
 
         return 1 - Math.sqrt(sum / maxSize);
+    }
+
+    @Override
+    public String toString() {
+        return getName();
     }
 }
