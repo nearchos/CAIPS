@@ -58,7 +58,6 @@ public class Simulate
             final SimulationResult simulationResult = simulate(measurementEntries, locationEstimationAlgorithm, LOOPS);
             System.out.println(" -> " + simulationResult);
         }
-
     }
 
     static private SimulationResult simulate(final List<MeasurementEntry> data, final LocationEstimationAlgorithm locationEstimationAlgorithm, final int loops)

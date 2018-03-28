@@ -161,7 +161,8 @@
                 android:value=".ui.ActivityCustomContext" />
         </activity>
         <activity android:name=".ui.ActivityTrainingOnMap" />
-        <activity android:name=".ui.ActivityTrainingsOnMap"></activity>
+        <activity android:name=".ui.ActivityTrainingsOnMap" />
+        <activity android:name=".ui.ActivityDatasets"></activity>
     </application>
 
 </manifest>

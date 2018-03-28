@@ -48,7 +48,8 @@
     <string name="Signal_strength">Signal strength</string>
     <string name="Frequency">Frequency</string>
     <string name="Please_select_an_account">Please select an account</string>
-    <string name="Please_select_a_location">Please select a location</string>
+    <string name="Please_select_or_create_a_location">Please select or create a location</string>
+    <string name="Please_select_or_create_a_dataset">Please select or create a dataset</string>
     <string name="Delete_training">Delete training?</string>
     <string name="Delete_all_trainings">Delete all trainings?</string>
     <string name="Must_define_at_least_one_floor_before_adding_trainings">Must define at least one floor before adding trainings</string>

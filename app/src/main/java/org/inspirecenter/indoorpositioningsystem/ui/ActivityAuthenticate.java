@@ -36,7 +36,7 @@ public class ActivityAuthenticate extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_authenticate);
 
-        listView = (ListView) findViewById(R.id.activity_select_account_list_view);
+        listView = findViewById(R.id.activity_select_account_list_view);
     }
 
     public static final int PERMISSIONS_REQUEST_GET_ACCOUNT = 43;
@@ -94,7 +94,7 @@ public class ActivityAuthenticate extends AppCompatActivity {
                     final String authToken = bundle.getString(AccountManager.KEY_AUTHTOKEN);
                     setAccountName(accountName);
                     setAuthToken(authToken);
-                    startActivity(new Intent(ActivityAuthenticate.this, ActivityLocations.class));
+                    startActivity(new Intent(ActivityAuthenticate.this, ActivityDatasets.class));
                     finish();
                 }
             }

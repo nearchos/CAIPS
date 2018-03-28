@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+         version="2.5">
+
+    <servlet>
+        <servlet-name>DatasetsServlet</servlet-name>
+        <servlet-class>org.inspirecenter.indoorpositioningsystem.api.DatasetsServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DatasetsServlet</servlet-name>
+        <url-pattern>/api/json/datasets</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>DatasetServlet</servlet-name>
+        <servlet-class>org.inspirecenter.indoorpositioningsystem.api.DatasetServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DatasetServlet</servlet-name>
+        <url-pattern>/api/json/dataset</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>CreateDatasetServlet</servlet-name>
+        <servlet-class>org.inspirecenter.indoorpositioningsystem.api.CreateDatasetServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>CreateDatasetServlet</servlet-name>
+        <url-pattern>/api/json/create-dataset</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>DeleteDatasetServlet</servlet-name>
+        <servlet-class>org.inspirecenter.indoorpositioningsystem.api.DeleteDatasetServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DeleteDatasetServlet</servlet-name>
+        <url-pattern>/api/json/delete-dataset</url-pattern>
+    </servlet-mapping>
+
+    <!--Objectify Filters-->
+    <filter>
+        <filter-name>ObjectifyFilter</filter-name>
+        <filter-class>com.googlecode.objectify.ObjectifyFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>ObjectifyFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    <listener>
+        <listener-class>org.inspirecenter.indoorpositioningsystem.OfyHelper</listener-class>
+    </listener>
+
+    <!--Security constraints-->
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>admin</web-resource-name>
+            <url-pattern>/admin/*</url-pattern>
+        </web-resource-collection>
+        <web-resource-collection>
+            <web-resource-name>json-api</web-resource-name>
+            <url-pattern>/api/json</url-pattern>
+        </web-resource-collection>
+        <user-data-constraint>
+            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+        </user-data-constraint>
+    </security-constraint>
+
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>admin</web-resource-name>
+            <url-pattern>/admin/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>admin</role-name>
+        </auth-constraint>
+    </security-constraint>
+    <!--End of Security constraints-->
+
+</web-app>

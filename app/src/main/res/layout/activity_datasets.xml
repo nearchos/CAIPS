@@ -1,33 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.ActivityLocations">
+    tools:context=".ui.ActivityDatasets">
 
     <TextView
-        android:id="@+id/activity_locations_label"
+        android:id="@+id/activity_datasets_label"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:padding="24dp"
-        android:text="@string/Please_select_or_create_a_location"
+        android:text="@string/Please_select_or_create_a_dataset"
         android:textSize="@dimen/text_size" />
 
     <View
-        android:id="@+id/activity_locations_line"
+        android:id="@+id/activity_datasets_line"
         android:background="@color/colorAccent"
-        android:layout_below="@id/activity_locations_label"
+        android:layout_below="@id/activity_datasets_label"
         android:layout_width="match_parent"
         android:layout_height="1dp"/>
 
     <ListView
-        android:id="@+id/activity_locations_list_view"
+        android:id="@+id/activity_datasets_list_view"
         android:padding="12dp"
-        android:layout_below="@id/activity_locations_line"
+        android:layout_below="@id/activity_datasets_line"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
