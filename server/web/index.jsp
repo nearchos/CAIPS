@@ -11,7 +11,10 @@
     <title>CAIPS</title>
   </head>
   <body>
+
   <h1>Context Aware Indoor Positioning System</h1>
-  Learn more at: <a href="https://github.com/nearchos/CAIPS">https://github.com/nearchos/CAIPS</a>
+  <p>Learn more at: <a href="https://github.com/nearchos/CAIPS">https://github.com/nearchos/CAIPS</a></p>
+
+  <p><a href="admin">Admin page</a></p>
   </body>
 </html>

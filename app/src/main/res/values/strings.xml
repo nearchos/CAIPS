@@ -64,6 +64,27 @@
     <string name="Active">Active</string>
     <string name="Inactive">Inactive</string>
     <string name="Checked">Checked</string>
+    <string name="Description">Description</string>
+    <string name="Format_version">Format version</string>
+    <string name="Simulation">Simulation</string>
+    <string name="Delete_dataset">Delete dataset?</string>
+    <string name="Split_to_training_and_testing">Split to training and testing (percentage)</string>
+    <string name="Start">Start</string>
+    <string name="Pause">Pause</string>
+    <string name="Reset">Reset</string>
+    <string name="Dataset_description">Dataset description</string>
+    <string name="Choose_algorithm">Choose algorithm</string>
+    <string name="Simulation_configuration">Simulation configuration</string>
+    <string name="Simulation_configuration_with_params">Simulation on %1$d entries, split to %2$s training vs %3$s testing, using \'%4$s\' algorithm</string>
+    <string name="Num_of_measurements">Number of measurements</string>
+    <string name="Empty_dataset">Empty dataset!</string>
+    <string name="Error">Error</string>
+    <string name="Upload_completed">Upload completed!</string>
+    <string name="Choose_method_of_upload">Choose method of upload</string>
+    <string name="Local_file">Local file</string>
+    <string name="Database">Database</string>
+    <string name="Upload">Upload</string>
+    <string name="Upload_dataset">Upload dataset with %1$d entries?</string>
 
     <string name="title_activity_login">Sign in</string>
     <string name="user_activity_summary">User activity as reported by the underlying Android system (via Google Play API)</string>

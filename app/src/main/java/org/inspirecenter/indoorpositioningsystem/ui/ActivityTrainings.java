@@ -52,7 +52,7 @@ public class ActivityTrainings extends AppCompatActivity {
         final ActionBar actionBar = getActionBar();
         if(actionBar != null) actionBar.setDisplayHomeAsUpEnabled(true);
 
-        this.listView = (ListView) findViewById(R.id.activity_trainings_list_view);
+        this.listView = findViewById(R.id.activity_trainings_list_view);
     }
 
     @Override

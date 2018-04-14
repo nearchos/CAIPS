@@ -4,9 +4,9 @@ import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
 import com.google.gson.Gson;
 import org.inspirecenter.indoorpositioningsystem.model.Dataset;
+import org.inspirecenter.indoorpositioningsystem.model.DatasetMetadata;
 import org.inspirecenter.indoorpositioningsystem.model.Datasets;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -22,14 +22,15 @@ public class DatasetsServlet extends HttpServlet {
     private static final Gson gson = new Gson();
     private static final MemcacheService memcacheService = MemcacheServiceFactory.getMemcacheService();
 
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
+        final String magic = request.getParameter("magic");
         // todo check for magic
 
         String json = (String) memcacheService.get(MEM_CACHE_DATASETS);
         if(json == null) {
-            final List<Dataset> datasetsList = ofy().load().type(Dataset.class).list();
-            final Datasets datasets = new Datasets(datasetsList);
+            final List<DatasetMetadata> datasetMetadataList = ofy().load().type(DatasetMetadata.class).list();
+            final Datasets datasets = new Datasets(datasetMetadataList);
             json = gson.toJson(datasets, Datasets.class);
             memcacheService.put(MEM_CACHE_DATASETS, json);
         }

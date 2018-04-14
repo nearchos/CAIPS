@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.ActivitySimulation">
+
+    <ProgressBar
+        android:id="@+id/simulation_progress_bar"
+
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <ScrollView
+        android:id="@+id/simulation_main"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:text="@string/Dataset_description"
+                android:textColor="@color/colorAccent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/simulation_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="12dp"
+                android:hint="@string/Description"/>
+
+            <TextView
+                android:text="@string/Num_of_measurements"
+                android:textColor="@color/colorAccent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/simulation_measurement_entries"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="12dp"
+                android:hint="@string/Num_of_measurements"/>
+
+            <TextView
+                android:text="@string/Split_to_training_and_testing"
+                android:textColor="@color/colorAccent"
+                android:layout_marginBottom="12dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <SeekBar
+                android:id="@+id/simulation_seek_bar"
+                style="@style/Widget.AppCompat.SeekBar.Discrete"
+                android:max="8"
+                android:progress="6"
+                android:padding="20dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:text="@string/Choose_algorithm"
+                android:textColor="@color/colorAccent"
+                android:layout_marginBottom="12dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <Spinner
+                android:id="@+id/simulation_algorithm_spinner"
+                android:layout_margin="12dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
+            <TextView
+                android:text="@string/Simulation_configuration"
+                android:textColor="@color/colorAccent"
+                android:layout_marginBottom="12dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/simulation_configuration"
+                android:text="@string/Simulation_configuration_with_params"
+                android:textSize="16sp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/simulation_buttons_row"
+        android:layout_alignParentBottom="true"
+        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:id="@+id/simulation_button_start"
+            android:onClick="startSimulation"
+            android:text="@string/Start"
+            style="@style/Base.Widget.AppCompat.Button.Borderless"
+            android:drawableStart="@drawable/ic_play_circle_outline_black_24dp"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/simulation_button_pause"
+            android:onClick="pauseSimulation"
+            android:enabled="false"
+            android:text="@string/Pause"
+            style="@style/Base.Widget.AppCompat.Button.Borderless"
+            android:drawableStart="@drawable/ic_pause_circle_outline_black_24dp"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:onClick="resetSimulation"
+            android:text="@string/Cancel"
+            style="@style/Base.Widget.AppCompat.Button.Borderless"
+            android:drawableStart="@drawable/ic_autorenew_black_24dp"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/simulation_progress_bar_horizontal"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        android:max="100"
+        android:visibility="gone"
+        android:padding="8dp"
+        android:layout_above="@id/simulation_buttons_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+</RelativeLayout>

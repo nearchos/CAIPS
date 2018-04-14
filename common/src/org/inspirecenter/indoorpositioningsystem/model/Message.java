@@ -1,9 +1,10 @@
 package org.inspirecenter.indoorpositioningsystem.model;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Vector;
 
-public final class Message {
+public final class Message implements Serializable {
 
     public enum Type { OK, ERROR };
 

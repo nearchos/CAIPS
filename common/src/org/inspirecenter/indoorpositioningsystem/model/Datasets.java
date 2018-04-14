@@ -1,16 +1,15 @@
 package org.inspirecenter.indoorpositioningsystem.model;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Vector;
 
-public class Datasets {
+public class Datasets implements Serializable {
 
     private final List<DatasetMetadata> datasetsMetadata = new Vector<>();
 
-    public Datasets(List<Dataset> datasets) {
-        for(final Dataset dataset : datasets) {
-            this.datasetsMetadata.add(new DatasetMetadata(dataset));
-        }
+    public Datasets(List<DatasetMetadata> datasetsMetadata) {
+        this.datasetsMetadata.addAll(datasetsMetadata);
     }
 
     public int getNumberOfDatasets() {
@@ -23,5 +22,9 @@ public class Datasets {
 
     public List<DatasetMetadata> getDatasetsMetadata() {
         return datasetsMetadata;
+    }
+
+    public boolean isEmpty() {
+        return datasetsMetadata.isEmpty();
     }
 }

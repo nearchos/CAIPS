@@ -40,6 +40,24 @@
         <url-pattern>/api/json/delete-dataset</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>AddParameterServlet</servlet-name>
+        <servlet-class>org.inspirecenter.indoorpositioningsystem.admin.AddParameterServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AddParameterServlet</servlet-name>
+        <url-pattern>/admin/add-parameter</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>DeleteParameterServlet</servlet-name>
+        <servlet-class>org.inspirecenter.indoorpositioningsystem.admin.DeleteParameterServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>DeleteParameterServlet</servlet-name>
+        <url-pattern>/admin/delete-parameter</url-pattern>
+    </servlet-mapping>
+
     <!--Objectify Filters-->
     <filter>
         <filter-name>ObjectifyFilter</filter-name>
